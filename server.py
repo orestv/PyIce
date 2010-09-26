@@ -39,10 +39,10 @@ class Listener(threading.Thread):
         clients = []
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind((host, port))
         s.settimeout(1)
         s.listen(backlog)
-        print 'Listener listening...'
 
         while 1:
             try:
@@ -51,7 +51,6 @@ class Listener(threading.Thread):
                 c.start()
                 clients.append(c)
             except:
-                print 'Listener timeout...'
                 if self.stopped():
                     print 'Listener stopped'
                     self.kill_clients(clients)
