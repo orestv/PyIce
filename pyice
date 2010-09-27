@@ -39,7 +39,8 @@ def daemonize(stdin = '/dev/null', stdout = '/dev/null', stderr='/dev/null'):
     os.dup2(se.fileno(), sys.stderr.fileno())
 
 opts, args = getopt.getopt(sys.argv[1:], 'dm=M', ['daemon', 'mount='])
-opts = opts[0]
+if opts:
+    opts = opts[0]
 
 print opts, args
 
