@@ -5,6 +5,7 @@ import random
 import shout
 import server
 import threading
+import time
 
 
 class Source:
@@ -58,7 +59,7 @@ class Server(threading.Thread):
         s.url = 'http://213.130.28.169:8000/rock'
         s.open()
 
-        bufsize = 4096
+        bufsize = 1024
 
         while 1:
             print '---------------------------------------------'
