@@ -8,8 +8,9 @@ import threading
 
 
 class Source:
-    def __init__(self, path='.'):
-        self.s = Server(path)
+    def __init__(self, path='.', mount='/pyrockHQ'):
+        print 'Starting server: mount = %s' % (mount,)
+        self.s = Server(path, mount)
         self.s.start()
 
     def stop(self):
@@ -21,8 +22,9 @@ class Server(threading.Thread):
     _playlist_size = 15
     _current_song = None
 
-    def __init__(self, path):
+    def __init__(self, path, mount):
         threading.Thread.__init__(self)
+        self._mount = mount
         self._listener = server.Listener(self)
         self._listener.start()
         path = unicode(path)
@@ -50,7 +52,7 @@ class Server(threading.Thread):
         s.host = 'localhost'
         s.format = 'mp3'
         s.password = 'ma$tercard'
-        s.mount = 'pyrockHQ'
+        s.mount = self._mount
         s.name = 'Radio Seth'
         s.genre = 'Rock'
         s.url = 'http://213.130.28.169:8000/rock'
@@ -60,6 +62,8 @@ class Server(threading.Thread):
 
         while 1:
             print '---------------------------------------------'
+            print 'Now playing: ', self._current_song
+            print '--------playlist:'
             for song in self._playlist:
                 print song
             f = open(self._current_song)

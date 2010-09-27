@@ -7,6 +7,7 @@ import shout
 import time
 from mutagen.easyid3 import EasyID3
 import source
+import getopt
 
 def daemonize(stdin = '/dev/null', stdout = '/dev/null', stderr='/dev/null'):
     try:
@@ -37,11 +38,22 @@ def daemonize(stdin = '/dev/null', stdout = '/dev/null', stderr='/dev/null'):
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
 
+opts, args = getopt.getopt(sys.argv[1:], 'dm=M', ['daemon', 'mount='])
+opts = opts[0]
 
-daemonize('/dev/null', '/tmp/source.log', '/tmp/source.log')
+print opts, args
+
+mount = '/rockHQ'
+
+for n in range(len(opts)):
+    opt = opts[n]
+    if opt in ('-m', '--mount'):
+        mount = args[n]
+    elif opt== '-d':
+        daemonize('/dev/null', '/tmp/source.log', '/tmp/source.log')
 
 
-S = source.Source(u'/media/d/Music')
+S = source.Source(u'/media/d/Music', mount)
 
 try:
     while 1:
