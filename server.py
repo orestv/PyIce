@@ -92,7 +92,10 @@ class Connector(threading.Thread):
                     self._client.close()
                     return
                 elif data == 'playlist':
-                    self._client.send(str(self._server.get_playlist()))
+                    pl = self._server.get_playlist()
+                    for s in pl:
+                        self._client.send(s + '\r\n')
+                    #self._client.send(str(self._server.get_playlist()))
             except:
                 if self.stopped():
                     print 'Client stopped!'
