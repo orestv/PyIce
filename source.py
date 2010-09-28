@@ -90,8 +90,8 @@ class Server(threading.Thread):
                     break
                 s.send(buf)
                 delay = s.delay()/1000.0
-                delay = delay * 0.9
-                if delay > 0:
+                delay = delay * 0.5
+                if delay > 0.5:
                     time.sleep(delay)
             f.close()
             self._next_song()
