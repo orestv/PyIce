@@ -10,7 +10,44 @@ class ClientWindow(gtk.Window):
         self.set_size_request(800, 600)
         self.set_position(gtk.WIN_POS_CENTER)
 
+
+        self.add(self.create_window_toplevel())        
+
         self.show_all()
+
+    def create_window_toplevel(self):
+        tbl = gtk.Table(2,2,False)
+
+        self._tvPlaylist = self.create_playlist_view()
+
+
+        tbl.attach(self._tvPlaylist, 0, 1, 0, 1)
+
+        return tbl
+
+    def create_playlist_view(self):
+        tvPlaylist = gtk.TreeView()
+
+        columns = [{'title': 'Song', 'type': str},
+                   {'title': 'Length', 'type': str}]
+
+        col_types = [x['type'] for x in columns]
+
+        print col_types
+        lsPlaylist = gtk.ListStore(*col_types)
+
+        for i in range(len(columns)):
+            col = columns[i]
+            renderer = gtk.CellRendererText()
+            c = gtk.TreeViewColumn(col['title'], renderer)
+            tvPlaylist.append_column(c)
+            c.add_attribute(renderer, 'text', i)
+
+        tvPlaylist.set_model(lsPlaylist)
+
+        lsPlaylist.append(('asdf', 'fdsadf'))
+
+        return tvPlaylist
 
 
     def destroy(self, widget):
