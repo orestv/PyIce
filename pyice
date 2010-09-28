@@ -38,23 +38,26 @@ def daemonize(stdin = '/dev/null', stdout = '/dev/null', stderr='/dev/null'):
     os.dup2(so.fileno(), sys.stdout.fileno())
     os.dup2(se.fileno(), sys.stderr.fileno())
 
-opts, args = getopt.getopt(sys.argv[1:], 'dm=M', ['daemon', 'mount='])
+opts, args = getopt.getopt(sys.argv[1:], 'dm=Mp=P', ['daemon', 'mount=', 'port='])
 if opts:
     opts = opts[0]
 
 print opts, args
 
 mount = '/rockHQ'
+port = 50000
 
 for n in range(len(opts)):
     opt = opts[n]
     if opt in ('-m', '--mount'):
         mount = args[n]
+    elif opt in ('-p', '--port'):
+        port = args[n]
     elif opt== '-d':
         daemonize('/dev/null', '/tmp/source.log', '/tmp/source.log')
 
 
-S = source.Source(u'/media/d/Music', mount)
+S = source.Source(u'/media/d/Music', mount, port)
 
 try:
     while 1:

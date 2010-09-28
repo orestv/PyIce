@@ -17,11 +17,12 @@ def pack(obj):
 
 
 class Listener(threading.Thread):
-    def __init__(self, server):
+    def __init__(self, server, port=50000):
         threading.Thread.__init__(self)
         self._server = server
         self._kill = False
         self._stop = threading.Event()
+        self._port = port
 
     def stop(self):
         print 'Listener stop called'
@@ -33,7 +34,7 @@ class Listener(threading.Thread):
     def run(self):
         print 'Listener started'
         host = ''
-        port = 50001
+        port = self._port
         backlog = 5
         size = 1024
         clients = []
@@ -81,13 +82,11 @@ class Connector(threading.Thread):
     def run(self):
         print 'client connected'
         print self._client
-        self._client.send('Password:\r\n')
         self._client.settimeout(1)
         while 1:
             try:
                 data = self._client.recv(BUFFER_SIZE)
                 data = data[:len(data)-2]
-                print data, len(data), data=='asdf'
                 if data == 'exit':
                     self._client.close()
                     return
@@ -95,7 +94,6 @@ class Connector(threading.Thread):
                     pl = self._server.get_playlist()
                     for s in pl:
                         self._client.send(s + '\r\n')
-                    #self._client.send(str(self._server.get_playlist()))
             except:
                 if self.stopped():
                     print 'Client stopped!'

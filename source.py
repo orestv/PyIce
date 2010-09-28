@@ -9,9 +9,9 @@ import time
 
 
 class Source:
-    def __init__(self, path='.', mount='/pyrockHQ'):
+    def __init__(self, path='.', mount='/pyrockHQ', port=50000):
         print 'Starting server: mount = %s' % (mount,)
-        self.s = Server(path, mount)
+        self.s = Server(path, mount, port)
         self.s.start()
 
     def stop(self):
@@ -23,7 +23,7 @@ class Server(threading.Thread):
     _playlist_size = 15
     _current_song = None
 
-    def __init__(self, path, mount):
+    def __init__(self, path, mount, port=50000):
         threading.Thread.__init__(self)
         self._mount = mount
         self._listener = server.Listener(self)
@@ -59,7 +59,7 @@ class Server(threading.Thread):
         s.url = 'http://213.130.28.169:8000/rock'
         s.open()
 
-        bufsize = 1024
+        bufsize = 8192
 
         while 1:
             print '---------------------------------------------'
@@ -89,7 +89,10 @@ class Server(threading.Thread):
                 if not buf:
                     break
                 s.send(buf)
-                s.sync()
+                delay = s.delay()/1000.0
+                delay = delay * 0.9
+                if delay > 0:
+                    time.sleep(delay)
             f.close()
             self._next_song()
 
