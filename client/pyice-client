@@ -18,7 +18,7 @@ class ClientWindow(gtk.Window):
     def create_window_toplevel(self):
         tbl = gtk.Table(2,2,False)
 
-        self._tvPlaylist = self.create_playlist_view()
+        self._tvPlaylist, self._lsPlaylist = self.create_playlist_view()
 
 
         tbl.attach(self._tvPlaylist, 0, 1, 0, 1)
@@ -47,7 +47,7 @@ class ClientWindow(gtk.Window):
 
         lsPlaylist.append(('asdf', 'fdsadf'))
 
-        return tvPlaylist
+        return tvPlaylist, lsPlaylist
 
 
     def destroy(self, widget):
