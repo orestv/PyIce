@@ -1,0 +1,24 @@
+#!/usr/bin/python2
+
+import gtk, pygtk
+import gobject
+
+class ClientWindow(gtk.Window):
+    def __init__(self):
+        super(ClientWindow, self).__init__()
+        self.connect('destroy', self.destroy)
+        self.set_size_request(800, 600)
+        self.set_position(gtk.WIN_POS_CENTER)
+
+        self.show_all()
+
+
+    def destroy(self, widget):
+        gtk.main_quit()
+
+
+if __name__ == '__main__':
+    c = ClientWindow()
+    gobject.threads_init()
+    gtk.main()
+
