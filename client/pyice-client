@@ -17,13 +17,41 @@ class ClientWindow(gtk.Window):
 
     def create_window_toplevel(self):
         tbl = gtk.Table(2,2,False)
+        tbl.set_col_spacings(5)
+        tbl.set_row_spacings(5)
 
         self._tvPlaylist, self._lsPlaylist = self.create_playlist_view()
-
+        self._tvCollection, self._lsCollection = self.create_collection_view()
 
         tbl.attach(self._tvPlaylist, 0, 1, 0, 1)
+        tbl.attach(self._tvCollection, 1, 2, 0, 1)
 
         return tbl
+
+
+    def create_collection_view(self):
+        tvCollection = gtk.TreeView()
+
+        columns = [{'title': 'Song', 'type': str},
+                   {'title': 'Length', 'type': str}]
+
+        col_types = [x['type'] for x in columns]
+
+        print col_types
+        lsCollection = gtk.ListStore(*col_types)
+
+        for i in range(len(columns)):
+            col = columns[i]
+            renderer = gtk.CellRendererText()
+            c = gtk.TreeViewColumn(col['title'], renderer)
+            tvCollection.append_column(c)
+            c.add_attribute(renderer, 'text', i)
+
+        tvCollection.set_model(lsCollection)
+
+        lsCollection.append(('asdf', 'fdsadf'))
+
+        return tvCollection, lsCollection
 
     def create_playlist_view(self):
         tvPlaylist = gtk.TreeView()
