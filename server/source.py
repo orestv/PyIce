@@ -1,5 +1,6 @@
 #coding: utf-8
 import os
+import mutagen
 from mutagen.easyid3 import EasyID3
 import random
 import shout
