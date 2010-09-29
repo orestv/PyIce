@@ -7,15 +7,17 @@ class ClientWindow(gtk.Window):
     def __init__(self):
         super(ClientWindow, self).__init__()
         self.connect('destroy', self.destroy)
+        self._create_gui()
+
+    def _create_gui(self):
         self.set_size_request(800, 600)
         self.set_position(gtk.WIN_POS_CENTER)
 
-
-        self.add(self.create_window_toplevel())        
+        self.add(self._create_window_toplevel())        
 
         self.show_all()
 
-    def create_window_toplevel(self):
+    def _create_window_toplevel(self):
         tbl = gtk.Table(2,2,False)
         tbl.set_col_spacings(5)
         tbl.set_row_spacings(5)
@@ -49,8 +51,6 @@ class ClientWindow(gtk.Window):
 
         tvCollection.set_model(lsCollection)
 
-        lsCollection.append(('asdf', 'fdsadf'))
-
         return tvCollection, lsCollection
 
     def create_playlist_view(self):
@@ -72,8 +72,6 @@ class ClientWindow(gtk.Window):
             c.add_attribute(renderer, 'text', i)
 
         tvPlaylist.set_model(lsPlaylist)
-
-        lsPlaylist.append(('asdf', 'fdsadf'))
 
         return tvPlaylist, lsPlaylist
 
