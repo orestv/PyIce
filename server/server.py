@@ -22,7 +22,7 @@ class Listener(threading.Thread):
         self._server = server
         self._kill = False
         self._stop = threading.Event()
-        self._port = port
+        self._port = int(port)
 
     def stop(self):
         print 'Listener stop called'

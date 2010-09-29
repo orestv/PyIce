@@ -27,7 +27,7 @@ class Server(threading.Thread):
     def __init__(self, path, mount, port=50000):
         threading.Thread.__init__(self)
         self._mount = mount
-        self._listener = server.Listener(self)
+        self._listener = server.Listener(self, port)
         self._listener.start()
         path = unicode(path)
         self._songs = find_all_music_files(path)
