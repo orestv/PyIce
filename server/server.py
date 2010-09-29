@@ -1,20 +1,15 @@
 #!/usr/bin/python2
 #coding: utf-8
+import os, sys
+sys.path.append('/home/seth/dev/py/pyice/util/')
 import socket
+print sys.path
 import pickle
 import StringIO
 import threading
+import pack
 
 BUFFER_SIZE = 65536
-
-def pack(obj):
-    buf = StringIO.StriogIO()
-    pickle.dump(obj, buf)
-    buf.seek(0)
-    result = buf.getvalue()
-    buf.close()
-    return result
-
 
 class Listener(threading.Thread):
     def __init__(self, server, port=50000):
@@ -70,6 +65,7 @@ class Connector(threading.Thread):
     def __init__(self, client, server):
         threading.Thread.__init__(self)
         self._client = client
+        self._client.setblocking(0)
         self._server = server
         self._stop = threading.Event()
 
@@ -86,15 +82,24 @@ class Connector(threading.Thread):
         while 1:
             try:
                 data = self._client.recv(BUFFER_SIZE)
-                data = data[:len(data)-2]
+                data = data.rstrip('\r\n')
+                print data, len(data)
+                if not data:
+                    self._client.close()
+                    return
                 if data == 'exit':
+                    print 'Exit message received'
                     self._client.close()
                     return
                 elif data == 'playlist':
                     pl = self._server.get_playlist()
-                    for s in pl:
-                        self._client.send(s + '\r\n')
-            except:
+                    s = pack.pack(pl)
+                    print 'Playlist\'s length: ', len(s)
+                    print 'Sent %n bytes' % (self._client.send(s))
+                    self._client.close()
+                    return
+            except AttributeError, e:
+                print e
                 if self.stopped():
                     print 'Client stopped!'
                     self._client.close()
