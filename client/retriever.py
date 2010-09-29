@@ -6,12 +6,12 @@ class Retriever:
         self._port = port
 
     def connect(self):
-        self._s = connect(self._host, self._port)
+        self._s = open_socket(self._host, self._port)
 
     def disconnect(self):
         self._s.close()
 
-def connect(host, port):
+def open_socket(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port))
     return s
