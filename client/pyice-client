@@ -12,8 +12,12 @@ class ClientWindow(gtk.Window):
         self._r = Retriever('localhost', '12345')
         pl = self._r.get_playlist()
         pl = [(p, '') for p in pl]
-        for item in pl:
-            self._lsPlaylist.append(item)
+        #for item in pl:
+        #    self._lsPlaylist.append(item)
+        col = self._r.get_collection()
+        songs = col[1]
+        for item in songs:
+            self._lsCollection.append(item)
 
     def _create_gui(self):
         self.set_size_request(800, 600)
@@ -83,7 +87,6 @@ class ClientWindow(gtk.Window):
 
 
     def destroy(self, widget):
-        self._r.disconnect()
         gtk.main_quit()
 
 

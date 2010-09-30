@@ -90,11 +90,31 @@ class Connector(threading.Thread):
                     print 'Exit message received'
                     self._client.close()
                     return
+                elif data == 'collection':
+                    print 'Collection requested...'
+                    col = self._server.get_collection()
+                    s = pack.pack(col)
+                    print 'Collection length: %i' % (len(s),)
+                    n = len(s)
+                    sent = 0
+                    while 1:
+                        sent = sent + self._client.send(s[sent:])
+                        if sent == n:
+                            break
+                    print 'Sent %i bytes' % (sent,)
+                    self._client.close()
+                    return
                 elif data == 'playlist':
                     pl = self._server.get_playlist()
                     s = pack.pack(pl)
                     print 'Playlist\'s length: ', len(s)
-                    print 'Sent %n bytes' % (self._client.send(s))
+                    n = len(s)
+                    sent = 0
+                    while 1:
+                        sent = sent + self._client.send(s[sent:])
+                        if sent == n:
+                            break
+                    print 'Sent %i bytes' % (sent,)
                     self._client.close()
                     return
             except AttributeError, e:

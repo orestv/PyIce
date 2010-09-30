@@ -8,6 +8,7 @@ import shout
 import server
 import threading
 import time
+import random
 
 
 class Source:
@@ -34,6 +35,10 @@ class Server(threading.Thread):
         self._listener.start()
         path = unicode(path)
         self._songs = find_all_music_files(path)
+        n = time.time()
+        print 'Generating collection...'
+        self._collection = generate_collection(self._songs)
+        print 'Collection generated, %f seconds spent' % (time.time()-n,)
         self._stop = threading.Event()
 
     def stop(self):
@@ -63,7 +68,7 @@ class Server(threading.Thread):
         s.url = 'http://213.130.28.169:8000/rock'
         s.open()
 
-        bufsize = 8192
+        bufsize = 65536
 
         while 1:
             print '---------------------------------------------'
@@ -104,7 +109,7 @@ class Server(threading.Thread):
                     break
                 s.send(buf)
                 delay = s.delay()/1000.0
-                delay = delay * 0.5
+                delay = delay * 0.2
                 if delay > 0.5:
                     time.sleep(delay)
             f.close()
@@ -136,19 +141,39 @@ class Server(threading.Thread):
     def get_playlist(self):
         return self._playlist
 
+    def get_collection(self):
+        return self._collection
+
 def get_tag(path, tagname):
    try:
        tags = EasyID3(path)
    except mutagen.id3.ID3NoHeaderError:
        return None
    if tags.has_key(tagname):
-       artists = tags[tagname]
-       if artists:
-           return artists[0]
+       tag = tags[tagname]
+       if tag:
+           return tag[0]
        else:
-           return None
+           return ''
    else:
-       return None
+       return ''
+
+def get_tags(path, lstTags):
+    try:
+        tags = EasyID3(path)
+    except mutagen.id3.ID3NoHeaderError:
+        return []
+    result = []
+    for tagname in lstTags:
+        if tags.has_key(tagname):
+            tag = tags[tagname]
+            if tag:
+                result.append(tag[0])
+            else:
+                result.append('')
+        else:
+            result.append('')
+    return result
 
 def find_all_music_files(top, type = 'mp3'):
     list = [(p, f) for (p, _, f) in os.walk(top) if f]
@@ -159,5 +184,14 @@ def find_all_music_files(top, type = 'mp3'):
             if file.endswith(type):
                 result.append(os.path.join(path, file))
     return result
+
+def generate_collection(lstFiles):
+    def f(x, y):
+        return x + ' - ' + y
+    id = random.random()
+    collection = [(p, reduce(f, get_tags(p, ['artist', 'title']))) for p in lstFiles]
+
+    return (id, collection)
+
 #    print (parent, dirs, files)
 
