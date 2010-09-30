@@ -1,6 +1,7 @@
 #coding: utf-8
 import os
 import mutagen
+import mad
 from mutagen.easyid3 import EasyID3
 import random
 import shout
@@ -21,8 +22,10 @@ class Source:
 
 
 class Server(threading.Thread):
-    _playlist_size = 15
-    _current_song = None
+    _playlist_size = 10
+    _current_song = {'path': None, 'duration': None, 'metadata': None,
+                     'startTime': None, 'endTime': None}
+
 
     def __init__(self, path, mount, port=50000):
         threading.Thread.__init__(self)
@@ -64,18 +67,28 @@ class Server(threading.Thread):
 
         while 1:
             print '---------------------------------------------'
-            print 'Now playing: ', self._current_song
-            print '--------playlist:'
-            for song in self._playlist:
-                print song
-            f = open(self._current_song)
-            artist = get_tag(self._current_song, 'artist')
+            print 'Now playing: ', self._current_song['path']
+            artist = get_tag(self._current_song['path'], 'artist')
             if artist:
                 artist = artist.encode('utf-8')
-            title = get_tag(self._current_song, 'title')
+            title = get_tag(self._current_song['path'], 'title')
             if title:
                 title = title.encode('utf-8')
             meta = artist + ' - ' + title
+            f = open(self._current_song['path'])
+
+            mf = mad.MadFile(f)
+            self._current_song['duration']  = mf.total_time() / 1000
+            self._current_song['endTime'] = time.time() + self._current_song['duration']
+            print self._current_song['endTime']
+            print self._current_song['duration']/60, ':', self._current_song['duration']%60
+            t = self._current_song['endTime']
+            print t
+            t = time.localtime(t)
+            print t
+            t = time.strftime('%H:%M:%S', t)
+            print t
+
             s.set_metadata({'song' : meta})
             nbuf = f.read(bufsize)
             while 1:
@@ -100,8 +113,8 @@ class Server(threading.Thread):
         s.close()
 
     def _next_song(self):
-        self._current_song = self._playlist[0]
-        artist = get_tag(self._current_song, 'artist')
+        self._current_song['path'] = self._playlist[0]
+        artist = get_tag(self._current_song['path'], 'artist')
         if artist:
             self._last_artists.append(artist)
             if self._last_artists and len(self._last_artists) > self._playlist_size:

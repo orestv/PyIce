@@ -49,7 +49,7 @@ class Listener(threading.Thread):
                 if self.stopped():
                     print 'Listener stopped'
                     self.kill_clients(clients)
-                    s.close()
+                    s.shutdown(1)
                     s = None
                     print 'Clients killed, stream closed'
                     return
