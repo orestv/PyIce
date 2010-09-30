@@ -3,7 +3,6 @@
 import os, sys
 sys.path.append('/home/seth/dev/py/pyice/util/')
 import socket
-print sys.path
 import pickle
 import StringIO
 import threading
