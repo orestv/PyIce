@@ -28,8 +28,9 @@ class Server(threading.Thread):
                      'startTime': None, 'endTime': None}
 
 
-    def __init__(self, path, mount, port=50000):
+    def __init__(self, path, mount, port=50000, bufsize=32768):
         threading.Thread.__init__(self)
+        self.set_buffer_size(bufsize)
         self._mount = mount
         self._listener = server.Listener(self, port)
         self._listener.start()
@@ -68,7 +69,6 @@ class Server(threading.Thread):
         s.url = 'http://213.130.28.169:8000/rock'
         s.open()
 
-        bufsize = 65536
 
         while 1:
             print '---------------------------------------------'
@@ -95,7 +95,7 @@ class Server(threading.Thread):
             print t
 
             s.set_metadata({'song' : meta})
-            nbuf = f.read(bufsize)
+            nbuf = f.read(self.get_buffer_size())
             while 1:
                 if self.stopped():
                     print 'Server stopped!'
@@ -104,18 +104,24 @@ class Server(threading.Thread):
                     self._listener.stop()
                     return
                 buf = nbuf
-                nbuf = f.read(bufsize)
+                nbuf = f.read(self.get_buffer_size())
                 if not buf:
                     break
                 s.send(buf)
                 delay = s.delay()/1000.0
                 delay = delay * 0.3
-                if delay > 0.5:
+                if delay > 0.2:
                     time.sleep(delay)
             f.close()
             self._next_song()
 
         s.close()
+
+    def set_buffer_size(self, bufsize):
+        self._bufsize = bufsize
+
+    def get_buffer_size(self):
+        return self._bufsize
 
     def _next_song(self):
         self._current_song['path'] = self._playlist[0]
