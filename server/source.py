@@ -109,7 +109,7 @@ class Server(threading.Thread):
                     break
                 s.send(buf)
                 delay = s.delay()/1000.0
-                delay = delay * 0.2
+                delay = delay * 0.3
                 if delay > 0.5:
                     time.sleep(delay)
             f.close()
