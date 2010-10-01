@@ -13,13 +13,13 @@ class Retriever:
 
     def get_playlist(self):
         s = open_socket(self._host, self._port)
-        p1 = net.command(s, 'playlist')
+        pl = net.command(s, 'playlist')
         pl = pack.unpack(pl)
         return pl
 
     def get_collection(self):
-
-        pl = send(self._host, self._port, 'collection', True)
+        s = open_socket(self._host, self._port)
+        pl = net.command(s, 'collection')
         pl = pack.unpack(pl)
         return pl
 
