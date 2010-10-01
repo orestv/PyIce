@@ -8,9 +8,7 @@ def receive(socket, fStopped=None, bClose=True, bufsize=4096):
     data = None
     while 1:
         try:
-            print 'Trying to receive...'
             data = socket.recv(bufsize)
-            print 'Data received!'
             if not data:
                 if bClose:
                     socket.close()
@@ -42,7 +40,7 @@ def send(socket, data, fStopped=None, bClose=True):
         try:
             sent = socket.send(data[total:])
             total += sent
-            if sent == size:
+            if total >= size:
                 if bClose:
                     socket.close()
                 return True
