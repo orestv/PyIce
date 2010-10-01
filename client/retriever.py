@@ -1,7 +1,7 @@
 import socket
 import sys
-sys.path.append('../util/')
-import pack
+sys.path.append('..')
+from pyice.util import pack
 
 BUFFER_SIZE = 8192
 

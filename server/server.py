@@ -1,12 +1,12 @@
 #!/usr/bin/python2
 #coding: utf-8
 import os, sys
-sys.path.append('/home/seth/dev/py/pyice/util/')
+sys.path.append('..')
 import socket
 import pickle
 import StringIO
 import threading
-import pack
+from pyice.util import pack
 
 BUFFER_SIZE = 65536
 
