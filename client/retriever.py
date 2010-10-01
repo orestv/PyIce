@@ -2,6 +2,7 @@ import socket
 import sys
 sys.path.append('..')
 from pyice.util import pack
+from pyice.util import net
 
 BUFFER_SIZE = 8192
 
@@ -11,11 +12,13 @@ class Retriever:
         self._port = int(port)
 
     def get_playlist(self):
-        pl = send(self._host, self._port, 'playlist', True)
+        s = open_socket(self._host, self._port)
+        p1 = net.command(s, 'playlist')
         pl = pack.unpack(pl)
         return pl
 
     def get_collection(self):
+
         pl = send(self._host, self._port, 'collection', True)
         pl = pack.unpack(pl)
         return pl
