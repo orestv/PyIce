@@ -44,8 +44,8 @@ class ClientWindow(gtk.Window):
     def create_collection_view(self):
         tvCollection = gtk.TreeView()
 
-        columns = [{'title': 'Song', 'type': str},
-                   {'title': 'Length', 'type': str}]
+        columns = [{'title': 'Path', 'type': str},
+                   {'title': 'Artist-Title', 'type': str}]
 
         col_types = [x['type'] for x in columns]
 
