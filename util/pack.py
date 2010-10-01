@@ -10,7 +10,6 @@ def pack(obj):
     return result
 
 def unpack(obj):
-    print 'Object: ', obj
     buf = StringIO.StringIO(obj)
     res = pickle.load(buf)
     buf.close()
