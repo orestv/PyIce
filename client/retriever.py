@@ -11,17 +11,33 @@ class Retriever:
         self._host = host
         self._port = int(port)
 
+    def _socket(self):
+        return open_socket(self._host, self._port)
+
     def get_playlist(self):
-        s = open_socket(self._host, self._port)
+        s = self._socket()
         pl = net.command(s, 'playlist')
         pl = pack.unpack(pl)
         return pl
 
     def get_collection(self):
-        s = open_socket(self._host, self._port)
+        s = self._socket()
         pl = net.command(s, 'collection')
         pl = pack.unpack(pl)
         return pl
+
+    def get_buffer_size(self):
+        s = self._socket()
+        b = net.command(s, 'get_buffer_size')
+        b = pack.unpack(b)
+        return b
+
+    def set_buffer_size(self, buffer_size):
+        s = self._socket()
+        #ret = net.command(s, 'set_buffer_size:' )
+        ret = net.command(s, 'set_buffer_size:%i' % (buffer_size,))
+        ret = pack.unpack(ret)
+        return ret
 
 def open_socket(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
