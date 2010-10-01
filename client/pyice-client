@@ -15,6 +15,9 @@ class ClientWindow(gtk.Window):
 
         self._create_gui()
         self._r = Retriever(*host_port)
+        print 'Buffer size: %i' % (self._r.get_buffer_size(),)
+        self._r.set_buffer_size(65536)
+        print 'Buffer size: %i' % (self._r.get_buffer_size(),)
         pl = self._r.get_playlist()
         pl = [(p, '') for p in pl]
         #for item in pl:
