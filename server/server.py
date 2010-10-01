@@ -7,6 +7,7 @@ import pickle
 import StringIO
 import threading
 from pyice.util import pack
+from pyice.util import net
 
 BUFFER_SIZE = 65536
 
@@ -80,7 +81,7 @@ class Connector(threading.Thread):
         self._client.settimeout(1)
         while 1:
             try:
-                data = self._client.recv(BUFFER_SIZE)
+                data = net.receive(self._client, fStopped=self.stopped, bClose=False)
                 data = data.rstrip('\r\n')
                 print data, len(data)
                 if not data:
