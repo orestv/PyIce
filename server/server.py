@@ -8,6 +8,7 @@ import StringIO
 import threading
 from pyice.util import pack
 from pyice.util import net
+import re
 
 BUFFER_SIZE = 65536
 
@@ -32,7 +33,7 @@ class Listener(threading.Thread):
         port = self._port
         backlog = 5
         size = 1024
-        clients = []
+        self._clients = []
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -43,27 +44,34 @@ class Listener(threading.Thread):
         while 1:
             try:
                 client, address = s.accept()
-                c = Connector(client, self._server)
+                c = Connector(client, self._server, self.client_closed)
                 c.start()
-                clients.append(c)
+                self._clients.append(c)
             except:
                 if self.stopped():
                     print 'Listener stopped'
-                    self.kill_clients(clients)
+                    self.kill_clients()
                     s.shutdown(1)
                     s = None
                     print 'Clients killed, stream closed'
                     return
 
-    def kill_clients(self, clients):
-        for c in clients:
+    def client_closed(self, client):
+        print 'Client called self-destruct func'
+        while client in self._clients:
+            print 'Removing client - self-destruction!'
+            self._clients.remove(client)
+
+    def kill_clients(self):
+        for c in self._clients:
             print 'Client...'
             c.stop()
 
 
 class Connector(threading.Thread):
-    def __init__(self, client, server):
+    def __init__(self, client, server, onClose=None):
         threading.Thread.__init__(self)
+        self._onClose = onClose
         self._client = client
         self._client.setblocking(0)
         self._server = server
@@ -78,49 +86,46 @@ class Connector(threading.Thread):
     def run(self):
         print 'client connected'
         print self._client
-        self._client.settimeout(1)
-        while 1:
-            try:
-                data = net.receive(self._client, fStopped=self.stopped, bClose=False)
-                data = data.rstrip('\r\n')
-                print data, len(data)
-                if not data:
-                    self._client.close()
-                    return
-                if data == 'exit':
-                    print 'Exit message received'
-                    self._client.close()
-                    return
-                elif data == 'collection':
-                    print 'Collection requested...'
-                    col = self._server.get_collection()
-                    s = pack.pack(col)
-                    print 'Collection length: %i' % (len(s),)
-                    n = len(s)
-                    sent = 0
-                    while 1:
-                        sent = sent + self._client.send(s[sent:])
-                        if sent == n:
-                            break
-                    print 'Sent %i bytes' % (sent,)
-                    self._client.close()
-                    return
-                elif data == 'playlist':
-                    pl = self._server.get_playlist()
-                    s = pack.pack(pl)
-                    print 'Playlist\'s length: ', len(s)
-                    n = len(s)
-                    sent = 0
-                    while 1:
-                        sent = sent + self._client.send(s[sent:])
-                        if sent == n:
-                            break
-                    print 'Sent %i bytes' % (sent,)
-                    self._client.close()
-                    return
-            except AttributeError, e:
-                print e
-                if self.stopped():
-                    print 'Client stopped!'
-                    self._client.close()
-                    return
+        try:
+            data = net.receive(self._client, fStopped=self.stopped, bClose=False)
+            data = data.rstrip('\r\n')
+            print data, len(data)
+            if not data:
+                self._client.close()
+            if data == 'exit':
+                print 'Exit message received'
+                self._client.close()
+
+            elif data == 'get_buffer_size':
+                print 'Buffer size requested...'
+                bufsize = self._server.get_buffer_size()
+                net.send(self._client, pack.pack(bufsize), self.stopped, True)
+
+            elif re.match('set_buffer_size:[0-9]+', data):
+                print 'Setting buffer size!'
+                buf = int(re.search('[0-9]+', data).group(0))
+                self._server.set_buffer_size(buf)
+                net.send(self._client, pack.pack(True), self.stopped, True)
+
+            elif data == 'collection':
+                print 'Collection requested...'
+                col = self._server.get_collection()
+                s = pack.pack(col)
+                net.send(self._client, s, self.stopped, True)
+
+            elif data == 'playlist':
+                pl = self._server.get_playlist()
+                s = pack.pack(pl)
+                net.send(self._client, s, self.stopped, True)
+            else:
+                net.send(self._client, pack.pack('INVALID_COMMAND'),
+                         self.stopped, True)
+
+        except AttributeError, e:
+            print e
+            if self.stopped():
+                print 'Client stopped!'
+                self._client.close()
+        if self._onClose:
+            self._onClose(self)
+
