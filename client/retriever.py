@@ -1,6 +1,6 @@
 import socket
 import sys
-sys.path.append('/home/seth/dev/py/pyice/util/')
+sys.path.append('../util/')
 import pack
 
 BUFFER_SIZE = 8192
