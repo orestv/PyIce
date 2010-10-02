@@ -9,21 +9,45 @@ from retriever import Retriever
 class ClientWindow(gtk.Window):
     def __init__(self):
         super(ClientWindow, self).__init__()
+
+        self._cancel_func = None
+
         self.connect('destroy', self.destroy)
 
         host_port = self._request_server_address()
         if not host_port:
             quit()
 
-        self._create_gui()
+        self._r = Retriever(*host_port)
 
-    def _load_collection(self):
+        self._create_gui()
+        self._load_collection()
+
+    def _load_collection(_self):
+        print 'Loading collection...'
         class CollectionFiller(threading.Thread):
             def __init__(self):
                 threading.Thread.__init__(self)
+                self._stop = threading.Event()
 
-        def fill_collection():
-            col = self._r.get_collection()
+            def stop(self):
+                print 'stop!'
+                self._stop.set()
+
+            def stopped(self):
+                print 'Stopped?', self._stop.is_set()
+                return self._stop.is_set()
+
+            def run(self):
+                print 'Thread started'
+                col = _self._r.get_collection(self.stopped)
+                print 'Collection fetched'
+                _self._operation_over()
+
+        f = CollectionFiller()
+        _self._init_operation_button(f.stop, 'Fetching collection...')
+        _self._set_cancel_func(f.stop)
+        f.start()
 
     def _request_server_address(self):
         dlg = gtk.Dialog('Server hostname and port', self, 0,
@@ -33,7 +57,7 @@ class ClientWindow(gtk.Window):
         tbl = gtk.Table(2, 2, False)
 
         eHost = gtk.Entry()
-        eHost.set_text('localhost')
+        eHost.set_text('213.130.28.169')
         ePort = gtk.Entry()
         ePort.set_text('30000')
 
@@ -69,11 +93,35 @@ class ClientWindow(gtk.Window):
 
         self.show_all()
 
+    def _operation_over(self):
+        if self._sb_handler:
+            self._sb.pop(self._sb_context)
+        self._btnCancelOperation.hide()
+
+    def _btnCancelOperation_clicked(self, widget):
+        if self._cancel_func:
+            print 'Cancel func isn''t null'
+            self._cancel_func()
+        self._operation_over()
+
     def _create_status_bar(self):
         sb = gtk.Statusbar()
+        self._sb_context = sb.get_context_id('Current operation')
+        self._sb_handler = None
         self._btnCancelOperation = gtk.Button(stock = gtk.STOCK_CANCEL)
+        self._btnCancelOperation.hide()
+        self._btnCancelOperation.connect('clicked', self._btnCancelOperation_clicked)
         sb.pack_end(self._btnCancelOperation, False, False)
         return sb
+
+    def _set_cancel_func(self, func):
+        self._cancel_func = func
+
+    def _init_operation_button(self, func=None, sName=''):
+        self._sb_handler = self._sb.push(self._sb_context, sName)
+        self._btnCancelOperation.connect('clicked', 
+                                        self._btnCancelOperation_clicked)
+        self._btnCancelOperation.show()
 
     def _create_window_toplevel(self):
         tbl = gtk.Table(2,3,False)

@@ -1,9 +1,11 @@
 import socket
 import threading
 
+SOCKET_TIMEOUT = 0.5
+
 def receive(socket, fStopped=None, bClose=True, bufsize=4096):
     if fStopped:
-        socket.settimeout(1)
+        socket.settimeout(SOCKET_TIMEOUT)
     result = ''
     data = None
     while 1:
@@ -17,6 +19,8 @@ def receive(socket, fStopped=None, bClose=True, bufsize=4096):
                 result += data
                 data = None
         except:
+            if fStopped:
+                print 'Inside recv function, are we  stopped? ' + str(fStopped())
             if fStopped and fStopped():
                     if bClose:
                         socket.close()
@@ -33,7 +37,7 @@ def receive(socket, fStopped=None, bClose=True, bufsize=4096):
 
 def send(socket, data, fStopped=None, bClose=True):
     if fStopped:
-        socket.settimeout(1)
+        socket.settimeout(SOCKET_TIMEOUT)
     total = 0
     size = len(data)
     while 1:
