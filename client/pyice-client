@@ -113,7 +113,8 @@ class ClientWindow(gtk.Window):
         self._sb_handler = None
         self._btnCancelOperation = gtk.Button(stock = gtk.STOCK_CANCEL)
         self._btnCancelOperation.hide()
-        self._btnCancelOperation.connect('clicked', self._btnCancelOperation_clicked)
+        self._btnCancelOperation.\
+                connect('clicked', self._btnCancelOperation_clicked)
         sb.pack_end(self._btnCancelOperation, False, False)
         return sb
 
@@ -127,6 +128,25 @@ class ClientWindow(gtk.Window):
         self._btnCancelOperation.show()
 
     def _create_window_toplevel(self):
+        vbox = gtk.VBox()
+
+        hbox = gtk.HBox()
+
+        eHost = gtk.Entry()
+        eHost.set_text('213.130.28.169')
+        ePort = gtk.Entry()
+        ePort.set_text('30000')
+        
+        hbox.pack_start(gtk.Label('Host'))
+        hbox.pack_start(eHost)
+        hbox.pack_start(gtk.Label('Port'))
+        hbox.pack_start(ePort)
+        
+        btnConnect = gtk.Button('Connect')
+        hbox.pack_start(btnConnect, fill=False, expand=False)
+
+        vbox.pack_start(hbox, fill=False, expand=False)
+
         tbl = gtk.Table(2,3,False)
         tbl.set_col_spacings(5)
         tbl.set_row_spacings(5)
@@ -149,7 +169,10 @@ class ClientWindow(gtk.Window):
 
         tbl.attach(self._sb, 0, 2, 1, 2, yoptions=0)
 
-        return tbl
+        vbox.pack_end(tbl)
+        tbl.set_sensitive(False)
+
+        return vbox
 
 
     def create_collection_view(self):
