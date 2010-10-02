@@ -3,6 +3,7 @@
 import gtk, pygtk
 import gobject
 import threading
+import time
 from retriever import Retriever
 
 class ClientWindow(gtk.Window):
@@ -93,9 +94,9 @@ class ClientWindow(gtk.Window):
 
         tbl.attach(sw, 1, 2, 0, 1)
 
-        sb = self._create_status_bar()
+        self._sb = self._create_status_bar()
 
-        tbl.attach(sb, 0, 2, 1, 2, yoptions=0)
+        tbl.attach(self._sb, 0, 2, 1, 2, yoptions=0)
 
         return tbl
 
