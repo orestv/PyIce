@@ -1,7 +1,7 @@
 import socket
 import threading
 
-SOCKET_TIMEOUT = 0.5
+SOCKET_TIMEOUT = 0.1
 
 def receive(socket, fStopped=None, bClose=True, bufsize=4096):
     if fStopped:
@@ -19,12 +19,10 @@ def receive(socket, fStopped=None, bClose=True, bufsize=4096):
                 result += data
                 data = None
         except:
-            if fStopped:
-                print 'Inside recv function, are we  stopped? ' + str(fStopped())
             if fStopped and fStopped():
                     if bClose:
                         socket.close()
-                    return result
+                    return None
             if result:
                 if data:
                     result += data
