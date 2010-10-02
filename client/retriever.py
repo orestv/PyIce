@@ -23,7 +23,8 @@ class Retriever:
     def get_collection(self, fStop=None):
         s = self._socket()
         pl = net.command(s, 'collection', fStop)
-        pl = pack.unpack(pl)
+        if pl:
+            pl = pack.unpack(pl)
         return pl
 
     def get_buffer_size(self):

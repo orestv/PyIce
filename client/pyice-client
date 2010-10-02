@@ -35,13 +35,17 @@ class ClientWindow(gtk.Window):
                 self._stop.set()
 
             def stopped(self):
-                print 'Stopped?', self._stop.is_set()
                 return self._stop.is_set()
 
             def run(self):
                 print 'Thread started'
                 col = _self._r.get_collection(self.stopped)
+                if self.stopped():
+                    return None
                 print 'Collection fetched'
+                id, collection = col
+                for c in collection:
+                    _self._lsCollection.append(c)
                 _self._operation_over()
 
         f = CollectionFiller()
@@ -100,7 +104,6 @@ class ClientWindow(gtk.Window):
 
     def _btnCancelOperation_clicked(self, widget):
         if self._cancel_func:
-            print 'Cancel func isn''t null'
             self._cancel_func()
         self._operation_over()
 
@@ -152,8 +155,8 @@ class ClientWindow(gtk.Window):
     def create_collection_view(self):
         tvCollection = gtk.TreeView()
 
-        columns = [{'title': 'Path', 'type': str},
-                   {'title': 'Artist-Title', 'type': str}]
+        columns = [ {'title': 'Artist-Title', 'type': str},
+                    {'title': 'Path', 'type': str}]
 
         col_types = [x['type'] for x in columns]
 
