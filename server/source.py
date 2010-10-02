@@ -195,7 +195,7 @@ def generate_collection(lstFiles):
     def f(x, y):
         return x + ' - ' + y
     id = random.random()
-    collection = [(p, reduce(f, get_tags(p, ['artist', 'title']))) for p in lstFiles]
+    collection = [(reduce(f, get_tags(p, ['artist', 'title'])), p) for p in lstFiles]
 
     return (id, collection)
 
