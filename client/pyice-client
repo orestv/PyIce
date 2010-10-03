@@ -1,0 +1,89 @@
+#!/usr/bin/python2
+
+import gtk, pygtk
+import gobject
+import threading
+import time
+from retriever import Retriever
+
+class ClientWindow(gtk.Window):
+    def __init__(self):
+        super(ClientWindow, self).__init__()
+        self.connect('destroy', gtk.main_quit)
+
+        self._init_gui()
+
+
+
+    def _init_gui(self):
+        self.set_size_request(600, 400)
+        self.set_position(gtk.WIN_POS_CENTER)
+        bxMain = gtk.VBox()
+
+        bxLogin = gtk.HBox()
+        
+        eHost = gtk.Entry()
+        ePort = gtk.Entry()
+        btnConnect = gtk.Button('Connect')
+
+        eHost.set_text('213.130.28.169')
+        ePort.set_text('30000')
+
+        def btnConnect_clicked(button):
+            host, port = eHost.get_text(), int(ePort.get_text())
+            self._r = Retriever(host, port)
+            bxLogin.set_sensitive(False)
+
+        btnConnect.connect('clicked', btnConnect_clicked)
+
+
+        bxLogin.pack_start(gtk.Label('Host:'))
+        bxLogin.pack_start(eHost)
+        bxLogin.pack_start(gtk.Label('Port:'))
+        bxLogin.pack_start(ePort)
+        bxLogin.pack_start(btnConnect)
+
+        bxMain.pack_start(bxLogin, expand=False, fill=False)
+
+        tbl = gtk.Table(2,2,False)
+
+        def createPlaylistView():
+            tvPlaylist = gtk.TreeView()
+            columns = [{'title': 'Artist - Title',
+                        'type': str},
+                       {'title': 'Length',
+                        'type': str},
+                       {'title': 'Path',
+                        'type': str}]
+            lsPlaylist = gtk.ListStore(*[col['type'] for col in columns])
+            for i in range(len(columns)):
+                col = columns[i]
+                renderer = gtk.CellRendererText()
+                c = gtk.TreeViewColumn(col['title'], renderer)
+                tvPlaylist.append_column(c)
+                c.add_attribute(renderer, 'text', i)
+            tvPlaylist.set_model(lsPlaylist)
+            return lsPlaylist, tvPlaylist
+
+        self._lsPlaylist, self._tvPlaylist = createPlaylistView()
+
+        tbl.attach(self._tvPlaylist, 0, 1, 0, 1)
+
+
+        bxMain.pack_start(tbl)
+
+        self._sb = gtk.Statusbar()
+        self._btnCancel = gtk.Button(stock=gtk.STOCK_CANCEL)
+        self._btnCancel.set_sensitive(False)
+        self._sb.pack_end(self._btnCancel, expand=False, fill=False)
+
+        bxMain.pack_end(self._sb, expand=False, fill=False)
+
+        self.add(bxMain)
+        self.show_all()
+
+
+if __name__ == '__main__':
+    gobject.threads_init()
+    c = ClientWindow()
+    gtk.main()
