@@ -14,14 +14,9 @@ class ClientWindow(gtk.Window):
 
         self.connect('destroy', self.destroy)
 
-        host_port = self._request_server_address()
-        if not host_port:
-            quit()
-
-        self._r = Retriever(*host_port)
+        self._r = None
 
         self._create_gui()
-        self._load_collection()
 
     def _load_collection(_self):
         print 'Loading collection...'
@@ -127,23 +122,30 @@ class ClientWindow(gtk.Window):
                                         self._btnCancelOperation_clicked)
         self._btnCancelOperation.show()
 
+    def btnConnect_clicked(self, button):
+        host, port = self.eHost.get_text(), int(self.ePort.get_text())
+        self._r = Retriever(host, port)
+        self._tblContent.set_sensitive(True)
+        self._load_collection()
+
     def _create_window_toplevel(self):
         vbox = gtk.VBox()
 
         hbox = gtk.HBox()
 
-        eHost = gtk.Entry()
-        eHost.set_text('213.130.28.169')
-        ePort = gtk.Entry()
-        ePort.set_text('30000')
+        self.eHost = gtk.Entry()
+        self.eHost.set_text('213.130.28.169')
+        self.ePort = gtk.Entry()
+        self.ePort.set_text('30000')
         
         hbox.pack_start(gtk.Label('Host'))
-        hbox.pack_start(eHost)
+        hbox.pack_start(self.eHost)
         hbox.pack_start(gtk.Label('Port'))
-        hbox.pack_start(ePort)
+        hbox.pack_start(self.ePort)
         
         btnConnect = gtk.Button('Connect')
         hbox.pack_start(btnConnect, fill=False, expand=False)
+        btnConnect.connect('clicked', self.btnConnect_clicked)
 
         vbox.pack_start(hbox, fill=False, expand=False)
 
@@ -171,6 +173,8 @@ class ClientWindow(gtk.Window):
 
         vbox.pack_end(tbl)
         tbl.set_sensitive(False)
+
+        self._tblContent = tbl
 
         return vbox
 
