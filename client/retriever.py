@@ -10,6 +10,8 @@ class Retriever:
     def __init__(self, host='localhost', port=50000):
         self._host = host
         self._port = int(port)
+        s = open_socket(self._host, self._port)
+        s.close()
 
     def _socket(self):
         return open_socket(self._host, self._port)
@@ -20,9 +22,9 @@ class Retriever:
         pl = pack.unpack(pl)
         return pl
 
-    def get_collection(self, fStop=None):
+    def get_collection(self, fStopped=None):
         s = self._socket()
-        pl = net.command(s, 'collection', fStop)
+        pl = net.command(s, 'collection', fStopped)
         if pl:
             pl = pack.unpack(pl)
         return pl
