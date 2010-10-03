@@ -37,9 +37,11 @@ class Server(threading.Thread):
         path = unicode(path)
         self._songs = find_all_music_files(path)
         n = time.time()
-        print 'Generating collection...'
-        self._collection = generate_collection(self._songs)
-        print 'Collection generated, %f seconds spent' % (time.time()-n,)
+        def f():
+            print 'Generating collection...'
+            self._collection = generate_collection(self._songs)
+            print 'Collection generated, %f seconds spent' % (time.time()-n,)
+        threading.Thread(target=f).start()
         self._stop = threading.Event()
 
     def stop(self):

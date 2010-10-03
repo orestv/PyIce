@@ -11,7 +11,7 @@ class Retriever:
         self._host = host
         self._port = int(port)
         s = open_socket(self._host, self._port)
-        s.close()
+        net.send(s, 'exit')
 
     def _socket(self):
         return open_socket(self._host, self._port)

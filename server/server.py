@@ -9,6 +9,7 @@ import threading
 from pyice.util import pack
 from pyice.util import net
 import re
+import time
 
 BUFFER_SIZE = 65536
 
@@ -88,8 +89,8 @@ class Connector(threading.Thread):
         print self._client
         try:
             data = net.receive(self._client, fStopped=self.stopped, bClose=False)
-            data = data.rstrip('\r\n')
-            print data, len(data)
+            if data:
+                data = data.rstrip('\r\n')
             if not data:
                 self._client.close()
             if data == 'exit':
@@ -111,6 +112,8 @@ class Connector(threading.Thread):
                 print 'Collection requested...'
                 col = self._server.get_collection()
                 s = pack.pack(col)
+                #TODO: remove sleep
+                time.sleep(2)
                 net.send(self._client, s, self.stopped, True)
 
             elif data == 'playlist':
@@ -118,8 +121,8 @@ class Connector(threading.Thread):
                 s = pack.pack(pl)
                 net.send(self._client, s, self.stopped, True)
             else:
-                net.send(self._client, pack.pack('INVALID_COMMAND'),
-                         self.stopped, True)
+                print 'Invalid command received: ' + data
+                self._client.close()
 
         except AttributeError, e:
             print e
