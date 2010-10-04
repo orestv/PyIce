@@ -123,7 +123,10 @@ class Server(threading.Thread):
         self._bufsize = bufsize
 
     def get_buffer_size(self):
-        return self._bufsize
+:       return self._bufsize
+
+    def set_next_song(self, path):
+        self._playlist = [path] + self._playlist
 
     def _next_song(self):
         self._current_song['path'] = self._playlist[0]
