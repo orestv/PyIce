@@ -43,7 +43,9 @@ class ClientWindow(gtk.Window):
 
         tbl = gtk.Table(2,2,False)
 
-        columns = [{'title': 'Artist - Title',
+        columns = [{'title': 'Artist',
+                    'type': str, 'visible': True},
+                   {'title': 'Title',
                     'type': str, 'visible': True},
                    {'title': 'Length',
                     'type': str, 'visible': True},
@@ -107,7 +109,7 @@ class ClientWindow(gtk.Window):
             if not result:
                 return False
             id, col = result
-            list = [(c['tags']['artist'] + ' - ' + c['tags']['title'], '',
+            list = [(c['tags']['artist'], c['tags']['title'], '',
                     c['path']) for c in col]
             def fGUI():
                 for c in list:
