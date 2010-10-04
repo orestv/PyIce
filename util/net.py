@@ -23,24 +23,18 @@ def receive(s, fStopped=None, bClose=True, bufsize=4096):
                 if bClose:
                     s.close()
                 return None
-        print 'Looped...'
         if fStopped and fStopped():
             if bClose:
                 s.close()
             return None
         if data:
-            print 'Data isn''t null!'
             if not nToReceive:
                 match = re.search('[0-9]*', data)
                 if not match:
                     return None
                 tmp = match.group(0)
                 nMetadataLength = len(tmp)+1
-                print 'Metadata length: %i' % (nMetadataLength,)
-                print 'tmp: ', tmp
-                print 'Integered tmp: %i' % (int(tmp), )
                 nToReceive = int(tmp) + nMetadataLength
-                print 'Declared length: %i' % (nToReceive,)
             result += data
             data = None
             if len(result) >= nToReceive:
