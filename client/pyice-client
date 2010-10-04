@@ -125,6 +125,14 @@ class ClientWindow(gtk.Window):
                 return False
             pl = result
             print pl
+            pl = [(c['tags']['artist'], c['tags']['title'], '',
+                   c['path']) for c in pl]
+            def fGUI():
+                for c in pl:
+                    self._lsPlaylist.append(c)
+            gobject.idle_add(fGUI)
+            return True
+
         self._run(f, 'Success!', 'Fail!')
 
 

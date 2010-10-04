@@ -202,7 +202,7 @@ def generate_collection(lstFiles):
     result = []
     for item in lstFiles:
         result.append({'path': item, 
-                       'tags': get_tags(item, ['artist', 'title'])})
+                       'tags': get_tags(item, ['artist', 'album', 'title'])})
     return result
 
 #    print (parent, dirs, files)
