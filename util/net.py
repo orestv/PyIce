@@ -61,9 +61,6 @@ def send(socket, data, fStopped=None, bClose=True):
     size = len(data)
     while 1:
         try:
-            #TODO: remote sleep
-            print 'Sleeping before sending...'
-            time.sleep(0.3)
             sent = socket.send(data[total:])
             print 'Sent: %i' % (sent,)
             total += sent
