@@ -170,17 +170,17 @@ def get_tags(path, lstTags):
     try:
         tags = EasyID3(path)
     except mutagen.id3.ID3NoHeaderError:
-        return []
-    result = []
+        return {}
+    result = {}
     for tagname in lstTags:
         if tags.has_key(tagname):
             tag = tags[tagname]
             if tag:
-                result.append(tag[0])
+                result[tagname] = tag[0]
             else:
-                result.append('')
+                result[tagname] = ('')
         else:
-            result.append('')
+            result[tagname] = ('')
     return result
 
 def find_all_music_files(top, type = 'mp3'):
@@ -197,7 +197,7 @@ def generate_collection(lstFiles):
     def f(x, y):
         return x + ' - ' + y
     id = random.random()
-    collection = [(reduce(f, get_tags(p, ['artist', 'title'])), p) for p in lstFiles]
+    collection = [get_tags(p, ['artist', 'title'])), p) for p in lstFiles]
 
     return (id, collection)
 
