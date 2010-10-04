@@ -123,7 +123,7 @@ class Server(threading.Thread):
         self._bufsize = bufsize
 
     def get_buffer_size(self):
-:       return self._bufsize
+        return self._bufsize
 
     def set_next_song(self, path):
         self._playlist = [path] + self._playlist
@@ -150,7 +150,7 @@ class Server(threading.Thread):
         return choice
 
     def get_playlist(self):
-        return self._playlist
+        return generate_collection(self._playlist)
 
     def get_collection(self):
         return self._collection
@@ -199,12 +199,11 @@ def find_all_music_files(top, type = 'mp3'):
 def generate_collection(lstFiles):
     def f(x, y):
         return x + ' - ' + y
-    id = random.random()
     result = []
     for item in lstFiles:
         result.append({'path': item, 
                        'tags': get_tags(item, ['artist', 'title'])})
-    return (id, result)
+    return result
 
 #    print (parent, dirs, files)
 

@@ -108,7 +108,7 @@ class ClientWindow(gtk.Window):
             result = self._r.get_collection(fStopped)
             if not result:
                 return False
-            id, col = result
+            col = result
             list = [(c['tags']['artist'], c['tags']['title'], '',
                     c['path']) for c in col]
             def fGUI():
