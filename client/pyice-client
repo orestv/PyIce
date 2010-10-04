@@ -48,7 +48,7 @@ class ClientWindow(gtk.Window):
                {'title': 'Length',
                 'type': str},
                {'title': 'Path',
-                'type': str}]
+                'type': str, 'visible': False}]
 
         self._lsCollection, self._tvCollection = \
                 create_treeview(columns)
@@ -162,12 +162,12 @@ def create_treeview(columns):
     ls = gtk.ListStore(*[col['type'] for col in columns])
     for i in range(len(columns)):
         col = columns[i]
-        print col
         renderer = gtk.CellRendererText()
         c = gtk.TreeViewColumn(col['title'], renderer)
         c.set_resizable(True)
         c.set_expand(False)
-        c.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        if not col['visible']:
+            c.set_visible(False)
         tv.append_column(c)
         c.add_attribute(renderer, 'text', i)
         tv.set_model(ls)
