@@ -52,9 +52,17 @@ class ClientWindow(gtk.Window):
         self._lsCollection, self._tvCollection = \
                 create_treeview(columns)
 
+        self._lsPlaylist, self._tvPlaylist = \
+                create_treeview(columns)
+
         sw = gtk.ScrolledWindow()
         sw.add(self._tvCollection)
         tbl.attach(sw, 0, 1, 0, 1)
+
+        sw = gtk.ScrolledWindow()
+        sw.add(self._tvPlaylist)
+        tbl.attach(sw, 1, 2, 0, 1)
+
         tbl.set_sensitive(False)
 
         bxMain.pack_start(tbl)
