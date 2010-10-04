@@ -197,9 +197,11 @@ def generate_collection(lstFiles):
     def f(x, y):
         return x + ' - ' + y
     id = random.random()
-    collection = [get_tags(p, ['artist', 'title'])), p) for p in lstFiles]
-
-    return (id, collection)
+    result = []
+    for item in lstFiles:
+        result.append({'path': item, 
+                       'tags': get_tags(item, ['artist', 'title'])})
+    return (id, result)
 
 #    print (parent, dirs, files)
 
