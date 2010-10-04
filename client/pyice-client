@@ -42,25 +42,15 @@ class ClientWindow(gtk.Window):
 
         tbl = gtk.Table(2,2,False)
 
-        def createPlaylistView():
-            tvPlaylist = gtk.TreeView()
-            columns = [{'title': 'Artist - Title',
-                        'type': str},
-                       {'title': 'Length',
-                        'type': str},
-                       {'title': 'Path',
-                        'type': str}]
-            lsPlaylist = gtk.ListStore(*[col['type'] for col in columns])
-            for i in range(len(columns)):
-                col = columns[i]
-                renderer = gtk.CellRendererText()
-                c = gtk.TreeViewColumn(col['title'], renderer)
-                tvPlaylist.append_column(c)
-                c.add_attribute(renderer, 'text', i)
-            tvPlaylist.set_model(lsPlaylist)
-            return lsPlaylist, tvPlaylist
+        columns = [{'title': 'Artist - Title',
+                'type': str},
+               {'title': 'Length',
+                'type': str},
+               {'title': 'Path',
+                'type': str}]
 
-        self._lsPlaylist, self._tvPlaylist = createPlaylistView()
+        self._lsPlaylist, self._tvPlaylist = \
+                create_treeview(columns)
 
         sw = gtk.ScrolledWindow()
         sw.add(self._tvPlaylist)
@@ -108,8 +98,10 @@ class ClientWindow(gtk.Window):
                 return False
             id, col = result
             col = [(c[0], '', c[1]) for c in col]
-            for c in col:
-                self._lsPlaylist.append(c)
+            def f():
+                for c in col:
+                    self._lsPlaylist.append(c)
+            gobject.idle_add(f)
             return True
         self._run(f, 'Success!', 'Fail!')
 
@@ -145,8 +137,20 @@ class ClientWindow(gtk.Window):
         self._btnCancel.set_sensitive(True)
         t.start()
 
+def create_treeview(columns):
+    tv = gtk.TreeView()
+    ls= gtk.ListStore(*[col['type'] for col in columns])
+    for i in range(len(columns)):
+        col = columns[i]
+        renderer = gtk.CellRendererText()
+        c = gtk.TreeViewColumn(col['title'], renderer)
+        tv.append_column(c)
+        c.add_attribute(renderer, 'text', i)
+        tv.set_model(ls)
+        return ls, tv
+
 
 if __name__ == '__main__':
-    gobject.threads_init()
+    gtk.gdk.threads_init()
     c = ClientWindow()
     gtk.main()
