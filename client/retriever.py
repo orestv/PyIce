@@ -32,6 +32,11 @@ class Retriever:
         b = pack.unpack(b)
         return b
 
+    def set_next_song(self, path):
+        s = self._socket()
+        net.send(s, ('set_next_song', path))
+        return
+
     def set_buffer_size(self, buffer_size):
         s = self._socket()
         #ret = net.command(s, 'set_buffer_size:' )

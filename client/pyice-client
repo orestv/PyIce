@@ -43,14 +43,14 @@ class ClientWindow(gtk.Window):
 
         tbl = gtk.Table(2,2,False)
 
-        columns = [{'title': 'Artist',
+        columns = [{'title': 'Path',
+                    'type': str, 'visible': False},
+                   {'title': 'Artist',
                     'type': str, 'visible': True},
                    {'title': 'Title',
                     'type': str, 'visible': True},
                    {'title': 'Length',
-                    'type': str, 'visible': True},
-                   {'title': 'Path',
-                    'type': str, 'visible': False}]
+                    'type': str, 'visible': True}]
 
         self._lsCollection, self._tvCollection = \
                 create_treeview(columns)
@@ -61,6 +61,14 @@ class ClientWindow(gtk.Window):
         sw = gtk.ScrolledWindow()
         sw.add(self._tvCollection)
         tbl.attach(sw, 0, 1, 0, 1)
+
+        def tvCollection_row_activated(view, row, column):
+            iter = self._lsCollection.get_iter(row)
+            path = self._lsCollection.get_value(iter, 0)
+            self._r.set_next_song(path)
+            self.download_playlist()
+
+        self._tvCollection.connect('row-activated', tvCollection_row_activated)
 
         sw = gtk.ScrolledWindow()
         sw.add(self._tvPlaylist)
@@ -109,11 +117,14 @@ class ClientWindow(gtk.Window):
             if not result:
                 return False
             col = result
-            list = [(c['tags']['artist'], c['tags']['title'], '',
-                    c['path']) for c in col]
+            list = [(c['path'], c['tags']['artist'], c['tags']['title'], '')\
+                    for c in col]
             def fGUI():
+                self._tvCollection.set_model(None)
                 for c in list:
                     self._lsCollection.append(c)
+                self._tvCollection.set_model(self._lsCollection)
+            self._lsCollection.clear()
             gobject.idle_add(fGUI)
             return True
         self._run(f, 'Success!', 'Fail!')
@@ -128,8 +139,11 @@ class ClientWindow(gtk.Window):
             pl = [(c['tags']['artist'], c['tags']['title'], '',
                    c['path']) for c in pl]
             def fGUI():
+                self._tvPlaylist.set_model(None)
                 for c in pl:
                     self._lsPlaylist.append(c)
+                self._tvPlaylist.set_model(self._lsPlaylist)
+            self._lsPlaylist.clear()
             gobject.idle_add(fGUI)
             return True
 

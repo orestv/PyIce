@@ -110,6 +110,10 @@ class Connector(threading.Thread):
                 col = self._server.get_collection()
                 net.send(self._client, col, self.stopped, True)
 
+            elif data[0] == 'set_next_song':
+                print 'Setting next song to %s' % (data[1],)
+                self._server.set_next_song(data[1])
+
             elif data[0] == 'playlist':
                 pl = self._server.get_playlist()
                 net.send(self._client, pl, self.stopped, True)
