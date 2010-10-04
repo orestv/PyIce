@@ -18,15 +18,12 @@ class Retriever:
 
     def get_playlist(self):
         s = self._socket()
-        pl = net.command(s, 'playlist')
-        pl = pack.unpack(pl)
+        pl = net.command(s, ('playlist',))
         return pl
 
     def get_collection(self, fStopped=None):
         s = self._socket()
-        pl = net.command(s, 'collection', fStopped)
-        if pl:
-            pl = pack.unpack(pl)
+        pl = net.command(s, ('collection',), fStopped)
         return pl
 
     def get_buffer_size(self):

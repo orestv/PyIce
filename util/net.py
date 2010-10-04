@@ -2,6 +2,7 @@ import socket
 import threading
 import re
 import time
+import pack
 
 SOCKET_TIMEOUT = 0.9
 
@@ -43,15 +44,18 @@ def receive(s, fStopped=None, bClose=True, bufsize=4096):
             result += data
             data = None
             if len(result) >= nToReceive:
-                return result[nMetadataLength:]
+                result = result[nMetadataLength:]
+                break
         else:
             time.sleep(SOCKET_TIMEOUT)
             continue
+    return pack.unpack(result)
 
 def send(socket, data, fStopped=None, bClose=True):
     if fStopped:
         socket.settimeout(SOCKET_TIMEOUT)
     total = 0
+    data = pack.pack(data)
     size = len(data)
     data = str(size) + ';' + data
     size = len(data)

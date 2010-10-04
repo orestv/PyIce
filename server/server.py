@@ -6,7 +6,6 @@ import socket
 import pickle
 import StringIO
 import threading
-from pyice.util import pack
 from pyice.util import net
 import re
 import time
@@ -89,37 +88,31 @@ class Connector(threading.Thread):
         print self._client
         try:
             data = net.receive(self._client, fStopped=self.stopped, bClose=False)
-            if data:
-                data = data.rstrip('\r\n')
             if not data:
                 self._client.close()
-            if data == 'exit':
+            if data[0] == 'exit':
                 print 'Exit message received'
                 self._client.close()
 
-            elif data == 'get_buffer_size':
+            elif data[0] == 'get_buffer_size':
                 print 'Buffer size requested...'
                 bufsize = self._server.get_buffer_size()
-                net.send(self._client, pack.pack(bufsize), self.stopped, True)
+                net.send(self._client, bufsize, self.stopped, True)
 
-            elif re.match('set_buffer_size:[0-9]+', data):
+            elif data[0] == 'set_buffer_size':
                 print 'Setting buffer size!'
-                buf = int(re.search('[0-9]+', data).group(0))
+                buf = data[1]
                 self._server.set_buffer_size(buf)
-                net.send(self._client, pack.pack(True), self.stopped, True)
+                net.send(self._client, True, self.stopped, True)
 
-            elif data == 'collection':
+            elif data[0] == 'collection':
                 print 'Collection requested...'
                 col = self._server.get_collection()
-                s = pack.pack(col)
-                #TODO: remove sleep
-                time.sleep(2)
-                net.send(self._client, s, self.stopped, True)
+                net.send(self._client, col, self.stopped, True)
 
-            elif data == 'playlist':
+            elif data[0] == 'playlist':
                 pl = self._server.get_playlist()
-                s = pack.pack(pl)
-                net.send(self._client, s, self.stopped, True)
+                net.send(self._client, pl, self.stopped, True)
             else:
                 print 'Invalid command received: ' + data
                 self._client.close()
