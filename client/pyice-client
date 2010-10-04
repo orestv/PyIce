@@ -9,6 +9,7 @@ from retriever import Retriever
 class ClientWindow(gtk.Window):
     def __init__(self):
         super(ClientWindow, self).__init__()
+
         self.connect('destroy', gtk.main_quit)
         self._fCancel = None
 
@@ -164,6 +165,8 @@ def create_treeview(columns):
         print col
         renderer = gtk.CellRendererText()
         c = gtk.TreeViewColumn(col['title'], renderer)
+        c.set_resizable(True)
+        c.set_expand(False)
         tv.append_column(c)
         c.add_attribute(renderer, 'text', i)
         tv.set_model(ls)
