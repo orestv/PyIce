@@ -136,7 +136,9 @@ class Server(threading.Thread):
             if self._last_artists and len(self._last_artists) > self._playlist_size:
                 self._last_artists.pop(0)
         self._playlist.pop(0)
-        self._playlist.append(self._pick_new_song())
+        def f():
+            self._playlist.append(self._pick_new_song())
+        threading.Thread(target=f).start()
 
     def _pick_new_song(self):
         artists = [get_tag(f, 'artist') for f in self._playlist]
