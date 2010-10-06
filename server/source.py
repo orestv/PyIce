@@ -40,6 +40,7 @@ class Server(threading.Thread):
         def f():
             print 'Generating collection...'
             self._collection = generate_collection(self._songs)
+            print self._collection
             print 'Collection generated, %f seconds spent' % (time.time()-n,)
         threading.Thread(target=f).start()
         self._stop = threading.Event()
@@ -199,12 +200,15 @@ def find_all_music_files(top, type = 'mp3'):
     return result
 
 def generate_collection(lstFiles):
-    def f(x, y):
-        return x + ' - ' + y
-    result = []
-    for item in lstFiles:
-        result.append({'path': item, 
-                       'tags': get_tags(item, ['artist', 'album', 'title'])})
+    result = {}
+    for filename in lstFiles:
+        tags = get_tags(filename, ['artist', 'album', 'title'])
+        artist, album, title = tags['artist'], tags['album'], tags['title']
+        if not result.has_key(artist):
+            result[artist] = {}
+        if not result[artist].has_key(album):
+            result[artist][album] = []
+        result[artist][album].append({'path': filename, 'title': title})
     return result
 
 #    print (parent, dirs, files)

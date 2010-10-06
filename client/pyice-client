@@ -85,6 +85,9 @@ class ClientWindow(gtk.Window):
 
         self._sb.pack_end(self._btnCancel, expand=False, fill=False)
 
+        self._status = gtk.VBox()
+        self._status.pack_start(gtk.Label('asdf'))
+        bxMain.pack_end(self._status, expand=False, fill=False)
         bxMain.pack_end(self._sb, expand=False, fill=False)
 
         def btnCancel_clicked(button):
@@ -127,7 +130,7 @@ class ClientWindow(gtk.Window):
             self._lsCollection.clear()
             gobject.idle_add(fGUI)
             return True
-        self._run(f, 'Success!', 'Fail!')
+        self._run(f, 'Fetching collection...', 'Success!', 'Fail!')
 
     def download_playlist(self):
         def f(fStopped):
@@ -147,10 +150,21 @@ class ClientWindow(gtk.Window):
             gobject.idle_add(fGUI)
             return True
 
-        self._run(f, 'Success!', 'Fail!')
+        self._run(f, 'Fetching playlist...', 'Success!', 'Fail!')
 
 
-    def _run(self, func, msgSuccess, msgFail):
+    def _run(self, func, msgStatus, msgSuccess, msgFail):
+        box = gtk.HBox()
+        print box
+        lblStatus = gtk.Label(msgStatus)
+        print lblStatus
+        btnCancel = gtk.Button(stock=gtk.STOCK_CANCEL)
+        print btnCancel
+        box.pack_start(lblStatus)
+        box.pack_start(btnCancel)
+        self._status.pack_start(box)
+        box.show_all()
+
         class LocalThread(threading.Thread):
             def __init__(_self):
                 threading.Thread.__init__(_self)
