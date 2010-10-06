@@ -40,7 +40,6 @@ class Server(threading.Thread):
         def f():
             print 'Generating collection...'
             self._collection = generate_collection(self._songs)
-            print self._collection
             print 'Collection generated, %f seconds spent' % (time.time()-n,)
         threading.Thread(target=f).start()
         self._stop = threading.Event()
@@ -59,6 +58,7 @@ class Server(threading.Thread):
         self._next_song()
         for i in range(self._playlist_size):
             self._playlist.append(self._pick_new_song())
+        print self.get_playlist()
         self.play()
 
     def play(self):
@@ -153,7 +153,7 @@ class Server(threading.Thread):
         return choice
 
     def get_playlist(self):
-        return generate_collection(self._playlist)
+        return generate_playlist(self._playlist)
 
     def get_collection(self):
         return self._collection
@@ -198,6 +198,19 @@ def find_all_music_files(top, type = 'mp3'):
             if file.endswith(type):
                 result.append(os.path.join(path, file))
     return result
+
+def generate_playlist(lstFiles):
+    result = []
+    for filename in lstFiles:
+        tags = get_tags(filename, ['artist', 'album', 'title'])
+        file = open(filename)
+        mf = mad.MadFile(file)
+        length = mf.total_time() / 1000
+        file.close()
+        length = time.strftime('%M:%S', time.gmtime(length))
+        result.append({'path': filename, 'tags': tags, 'length': length})
+    return result
+
 
 def generate_collection(lstFiles):
     result = {}

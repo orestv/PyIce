@@ -54,8 +54,14 @@ class ClientWindow(gtk.Window):
                    {'title': 'Length',
                     'type': str, 'visible': True}]
 
+        columns = [{'title': 'Path',
+                    'type': str, 'visible': False},
+                   {'title': 'Song',
+                    'type': str, 'visible': True}
+                  ]
+
         self._tsCollection, self._tvCollection = \
-                create_treeview(columns)
+                create_treeview(columns, True)
 
 
         columns = [{'title': 'Path',
@@ -134,15 +140,13 @@ class ClientWindow(gtk.Window):
             col = result
             for artist in col:
                 rwArtist = self._tsCollection.append(None, 
-                                                [artist, artist, artist, None, None])
+                                                ['', artist])
                 for album in col[artist]:
                     rwAlbum = self._tsCollection.append(rwArtist,
-                                                        [album, None,
-                                                         None, None, None])
+                                                        ['', album])
                     for song in col[artist][album]:
                         self._tsCollection.append(rwAlbum,
-                                                  [song['title'], None, None,
-                                                   None, None])
+                                                  [song['path'], song['title']])
 
             #list = [(c['path'], c['tags']['artist'], c['tags']['title'], '')\
             #        for c in col]
@@ -163,7 +167,7 @@ class ClientWindow(gtk.Window):
                 return False
             pl = result
             print pl
-            pl = [(c['tags']['artist'], c['tags']['title'], '',
+            pl = [(c['tags']['artist'], c['tags']['title'], c['length'],
                    c['path']) for c in pl]
             def fGUI():
                 self._tvPlaylist.set_model(None)
@@ -219,9 +223,12 @@ class ClientWindow(gtk.Window):
         self._btnCancel.set_sensitive(True)
         t.start()
 
-def create_treeview(columns):
+def create_treeview(columns, tree=False):
     tv = gtk.TreeView()
-    ls = gtk.TreeStore(*[col['type'] for col in columns])
+    if tree:
+        ls = gtk.TreeStore(*[col['type'] for col in columns])
+    else:
+        ls = gtk.ListStore(*[col['type'] for col in columns])
     for i in range(len(columns)):
         col = columns[i]
         renderer = gtk.CellRendererText()
