@@ -85,6 +85,9 @@ class Server(threading.Thread):
             meta = artist + ' - ' + title
             f = open(self._current_song['path'])
 
+            nbuf = f.read(self.get_buffer_size())
+            s.send(nbuf)
+
             mf = mad.MadFile(f)
             self._current_song['duration']  = mf.total_time() / 1000
             self._current_song['endTime'] = time.time() + self._current_song['duration']
@@ -117,6 +120,8 @@ class Server(threading.Thread):
                     time.sleep(delay)
             f.close()
             self._next_song()
+            while not os.path.exists(self._current_song['path']):
+                self._next_song()
 
         s.close()
 
@@ -127,7 +132,8 @@ class Server(threading.Thread):
         return self._bufsize
 
     def set_next_song(self, path):
-        self._playlist = [path] + self._playlist
+        if os.exists(path):
+            self._playlist = [path] + self._playlist
 
     def _next_song(self):
         self._current_song['path'] = self._playlist[0]
