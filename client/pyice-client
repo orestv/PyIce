@@ -47,13 +47,25 @@ class ClientWindow(gtk.Window):
                     'type': str, 'visible': False},
                    {'title': 'Artist',
                     'type': str, 'visible': True},
+                   {'title': 'Album',
+                    'type': str, 'visible': True},
                    {'title': 'Title',
                     'type': str, 'visible': True},
                    {'title': 'Length',
                     'type': str, 'visible': True}]
 
-        self._lsCollection, self._tvCollection = \
+        self._tsCollection, self._tvCollection = \
                 create_treeview(columns)
+
+
+        columns = [{'title': 'Path',
+                    'type': str, 'visible': False},
+                   {'title': 'Artist',
+                    'type': str, 'visible': True},
+                   {'title': 'Title',
+                    'type': str, 'visible': True},
+                   {'title': 'Length',
+                    'type': str, 'visible': True}]
 
         self._lsPlaylist, self._tvPlaylist = \
                 create_treeview(columns)
@@ -63,8 +75,8 @@ class ClientWindow(gtk.Window):
         tbl.attach(sw, 0, 1, 0, 1)
 
         def tvCollection_row_activated(view, row, column):
-            iter = self._lsCollection.get_iter(row)
-            path = self._lsCollection.get_value(iter, 0)
+            iter = self._tsCollection.get_iter(row)
+            path = self._tsCollection.get_value(iter, 0)
             self._r.set_next_song(path)
             self.download_playlist()
 
@@ -120,15 +132,27 @@ class ClientWindow(gtk.Window):
             if not result:
                 return False
             col = result
-            list = [(c['path'], c['tags']['artist'], c['tags']['title'], '')\
-                    for c in col]
-            def fGUI():
-                self._tvCollection.set_model(None)
-                for c in list:
-                    self._lsCollection.append(c)
-                self._tvCollection.set_model(self._lsCollection)
-            self._lsCollection.clear()
-            gobject.idle_add(fGUI)
+            for artist in col:
+                rwArtist = self._tsCollection.append(None, 
+                                                [artist, artist, artist, None, None])
+                for album in col[artist]:
+                    rwAlbum = self._tsCollection.append(rwArtist,
+                                                        [album, None,
+                                                         None, None, None])
+                    for song in col[artist][album]:
+                        self._tsCollection.append(rwAlbum,
+                                                  [song['title'], None, None,
+                                                   None, None])
+
+            #list = [(c['path'], c['tags']['artist'], c['tags']['title'], '')\
+            #        for c in col]
+            #def fGUI():
+            #    self._tvCollection.set_model(None)
+            #    for c in list:
+            #        self._tsCollection.append(c)
+            #    self._tvCollection.set_model(self._tsCollection)
+            #self._tsCollection.clear()
+            #gobject.idle_add(fGUI)
             return True
         self._run(f, 'Fetching collection...', 'Success!', 'Fail!')
 
@@ -197,7 +221,7 @@ class ClientWindow(gtk.Window):
 
 def create_treeview(columns):
     tv = gtk.TreeView()
-    ls = gtk.ListStore(*[col['type'] for col in columns])
+    ls = gtk.TreeStore(*[col['type'] for col in columns])
     for i in range(len(columns)):
         col = columns[i]
         renderer = gtk.CellRendererText()
