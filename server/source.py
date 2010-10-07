@@ -121,6 +121,8 @@ class Server(threading.Thread):
             self._next_song()
             while not os.path.exists(self._current_song['path']):
                 self._next_song()
+            f = open(self._current_song['path'])
+
 
         s.close()
 
