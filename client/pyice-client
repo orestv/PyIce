@@ -155,7 +155,6 @@ class ClientWindow(gtk.Window):
             if not result:
                 return False
             pl = result
-            print pl
             pl = [(c['path'], c['tags']['artist'], c['tags']['title'], c['length']) for c in pl]
             def fGUI():
                 self._tvPlaylist.set_model(None)
@@ -167,7 +166,6 @@ class ClientWindow(gtk.Window):
             return True
 
         self._run(f, 'Fetching playlist...', 'Success!', 'Fail!')
-
 
     def _run(self, func, msgStatus, msgSuccess, msgFail):
         box = gtk.HBox()

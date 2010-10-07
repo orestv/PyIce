@@ -58,7 +58,6 @@ class Server(threading.Thread):
         self._next_song()
         for i in range(self._playlist_size):
             self._playlist.append(self._pick_new_song())
-        print self.get_playlist()
         self.play()
 
     def play(self):
@@ -132,7 +131,7 @@ class Server(threading.Thread):
         return self._bufsize
 
     def set_next_song(self, path):
-        if os.exists(path):
+        if os.path.exists(path):
             self._playlist = [path] + self._playlist
 
     def _next_song(self):
