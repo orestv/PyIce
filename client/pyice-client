@@ -45,17 +45,6 @@ class ClientWindow(gtk.Window):
 
         columns = [{'title': 'Path',
                     'type': str, 'visible': False},
-                   {'title': 'Artist',
-                    'type': str, 'visible': True},
-                   {'title': 'Album',
-                    'type': str, 'visible': True},
-                   {'title': 'Title',
-                    'type': str, 'visible': True},
-                   {'title': 'Length',
-                    'type': str, 'visible': True}]
-
-        columns = [{'title': 'Path',
-                    'type': str, 'visible': False},
                    {'title': 'Song',
                     'type': str, 'visible': True}
                   ]
@@ -167,8 +156,7 @@ class ClientWindow(gtk.Window):
                 return False
             pl = result
             print pl
-            pl = [(c['tags']['artist'], c['tags']['title'], c['length'],
-                   c['path']) for c in pl]
+            pl = [(c['path'], c['tags']['artist'], c['tags']['title'], c['length']) for c in pl]
             def fGUI():
                 self._tvPlaylist.set_model(None)
                 for c in pl:
