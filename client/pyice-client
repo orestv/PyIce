@@ -148,8 +148,10 @@ class ClientWindow(gtk.Window):
 
     def download_playlist(self):
         def f(fStopped):
+            self._tvPlaylist.set_sensitive(False)
             result = self._r.get_playlist(fStopped)
             if not result:
+                self._tvPlaylist.set_sensitive(True)
                 return False
             pl = result
             pl = [(c['path'], c['tags']['artist'], c['tags']['title'], c['length']) for c in pl]
@@ -160,6 +162,7 @@ class ClientWindow(gtk.Window):
                 self._tvPlaylist.set_model(self._lsPlaylist)
             self._lsPlaylist.clear()
             gobject.idle_add(fGUI)
+            self._tvPlaylist.set_sensitive(True)
             return True
 
         self._run(f, 'Downloading playlist...', \
@@ -201,7 +204,7 @@ class ClientWindow(gtk.Window):
                 else:
                     lblStatus.set_text(msgFail)
                 btnCancel.set_sensitive(False)
-                time.sleep(5)
+                time.sleep(2)
                 box.destroy()
         t = LocalThread()
 
