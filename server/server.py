@@ -117,6 +117,12 @@ class Connector(threading.Thread):
             elif data[0] == 'playlist':
                 pl = self._server.get_playlist()
                 net.send(self._client, pl, self.stopped, True)
+
+            elif data[0] == 'get_current_song':
+                print 'Sending current song'
+                song = self._server.get_current_song()
+                print song
+                net.send(self._client, song, None, True)
             else:
                 print 'Invalid command received: ' + data
                 self._client.close()

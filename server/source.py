@@ -24,9 +24,7 @@ class Source:
 
 class Server(threading.Thread):
     _playlist_size = 10
-    _current_song = {'path': None, 'duration': None, 'metadata': None,
-                     'startTime': None, 'endTime': None}
-
+    _current_song = {}
 
     def __init__(self, path, mount, port=50000, bufsize=32768):
         threading.Thread.__init__(self)
@@ -82,17 +80,17 @@ class Server(threading.Thread):
             if title:
                 title = title.encode('utf-8')
             meta = artist + ' - ' + title
+            self._current_song['artist'] = artist
+            self._current_song['title'] = title
             f = open(self._current_song['path'])
 
             nbuf = f.read(self.get_buffer_size())
             s.send(nbuf)
 
-            mf = mad.MadFile(f)
-            self._current_song['duration']  = mf.total_time() / 1000
-            self._current_song['endTime'] = time.time() + self._current_song['duration']
-            print self._current_song['endTime']
-            print self._current_song['duration']/60, ':', self._current_song['duration']%60
-            t = self._current_song['endTime']
+            self._current_song['end_time'] = time.time() + self._current_song['duration']/1000
+            print self._current_song['end_time']
+            print self._current_song['duration']/60000, ':', self._current_song['duration']%60
+            t = self._current_song['end_time']
             print t
             t = time.localtime(t)
             print t
@@ -121,8 +119,6 @@ class Server(threading.Thread):
             self._next_song()
             while not os.path.exists(self._current_song['path']):
                 self._next_song()
-            f = open(self._current_song['path'])
-
 
         s.close()
 
@@ -138,7 +134,12 @@ class Server(threading.Thread):
 
     def _next_song(self):
         self._current_song['path'] = self._playlist[0]
+        self._current_song['start_time'] = time.time()
         artist = get_tag(self._current_song['path'], 'artist')
+        f = open(self._current_song['path'])
+        mf = mad.MadFile(f)
+        self._current_song['duration'] = mf.total_time()/1000
+        f.close()
         if artist:
             self._last_artists.append(artist)
             if self._last_artists and len(self._last_artists) > self._playlist_size:
@@ -164,6 +165,9 @@ class Server(threading.Thread):
 
     def get_collection(self):
         return self._collection
+
+    def get_current_song(self):
+        return self._current_song
 
 def get_tag(path, tagname):
    try:

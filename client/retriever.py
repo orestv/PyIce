@@ -11,7 +11,7 @@ class Retriever:
         self._host = host
         self._port = int(port)
         s = open_socket(self._host, self._port)
-        net.send(s, 'exit')
+        net.send(s, ('exit',))
 
     def _socket(self):
         return open_socket(self._host, self._port)
@@ -28,9 +28,16 @@ class Retriever:
 
     def get_buffer_size(self):
         s = self._socket()
-        b = net.command(s, 'get_buffer_size')
-        b = pack.unpack(b)
+        b = net.command(s, ('get_buffer_size',))
         return b
+
+    def get_current_song(self):
+        print 'Requesting current song!'
+        s = self._socket()
+        print 'Created a socket'
+        song = net.command(s, ('get_current_song',))
+        print 'Song received'
+        return song
 
     def set_next_song(self, path):
         s = self._socket()

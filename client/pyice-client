@@ -10,12 +10,11 @@ class ClientWindow(gtk.Window):
     def __init__(self):
         super(ClientWindow, self).__init__()
 
-        self.connect('destroy', gtk.main_quit)
+        self.connect('destroy', self.on_destroy)
         self._fCancel = None
+        self._lsThreads = []
 
         self._init_gui()
-
-
 
     def _init_gui(self):
         self.set_size_request(600, 400)
@@ -31,8 +30,6 @@ class ClientWindow(gtk.Window):
         eHost.set_text('213.130.28.169')
         ePort.set_text('30000')
 
-
-
         bxLogin.pack_start(gtk.Label('Host:'))
         bxLogin.pack_start(eHost)
         bxLogin.pack_start(gtk.Label('Port:'))
@@ -40,6 +37,17 @@ class ClientWindow(gtk.Window):
         bxLogin.pack_start(btnConnect)
 
         bxMain.pack_start(bxLogin, expand=False, fill=False)
+
+        self._lblCurrentSong = gtk.Label()
+        self._lblCountdown = gtk.Label()
+        bxCurrent = gtk.HBox()
+
+        bxCurrent.pack_start(gtk.Label('Currently playing:'))
+        bxCurrent.pack_start(self._lblCurrentSong)
+        bxCurrent.pack_start(gtk.Label('Ends in '))
+        bxCurrent.pack_start(self._lblCountdown)
+
+        bxMain.pack_start(bxCurrent, expand=False, fill=False)
 
         tbl = gtk.Table(2,2,False)
 
@@ -108,6 +116,7 @@ class ClientWindow(gtk.Window):
                 return
             self.download_collection()
             self.download_playlist()
+            self.update_current_song()
 
 
         self._btnCancel.connect('clicked',  btnCancel_clicked)
@@ -115,6 +124,33 @@ class ClientWindow(gtk.Window):
 
         self.add(bxMain)
         self.show_all()
+
+    def update_current_song(self):
+        class LocalThread(threading.Thread):
+            def __init__(_self):
+                threading.Thread.__init__(_self)
+                self._e = threading.Event()
+
+            def stopped(_self):
+                return self._e.is_set()
+
+            def stop(_self):
+                print 'Thread stop() called.'
+                self._e.set()
+
+            def run(_self):
+                self.add_thread(_self)
+                while 1:
+                    if _self.stopped():
+                        break
+                    song = self._r.get_current_song()
+                    self._lblCurrentSong.set_text(song['artist'] + ' - ' + song['title'])
+                    time.sleep(1)
+                self.remove_thread(_self)
+
+        t = LocalThread()
+        t.start()
+
 
     def download_collection(self):
         def f(fStopped):
@@ -194,6 +230,7 @@ class ClientWindow(gtk.Window):
                 self._e.set()
 
             def run(_self):
+                self.add_thread(_self)
                 print 'Thread run(), sleeping...'
                 #time.sleep(3)
                 print 'Thread run(), waking up.'
@@ -206,6 +243,7 @@ class ClientWindow(gtk.Window):
                 btnCancel.set_sensitive(False)
                 time.sleep(2)
                 box.destroy()
+                self.remove_thread(_self)
         t = LocalThread()
 
         def btnCancel_clicked(button):
@@ -216,6 +254,17 @@ class ClientWindow(gtk.Window):
         btnCancel.connect('clicked', btnCancel_clicked)
 
         t.start()
+
+    def add_thread(self, thread):
+        self._lsThreads.append(thread)
+
+    def remove_thread(self, thread):
+        self._lsThreads.remove(thread)
+
+    def on_destroy(self, event):
+        for thread in self._lsThreads:
+            thread.stop()
+        gtk.main_quit()
 
 def create_treeview(columns, tree=False):
     tv = gtk.TreeView()
