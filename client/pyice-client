@@ -126,30 +126,36 @@ class ClientWindow(gtk.Window):
         self.show_all()
 
     def update_current_song(self):
-        class LocalThread(threading.Thread):
-            def __init__(_self):
-                threading.Thread.__init__(_self)
-                self._e = threading.Event()
 
-            def stopped(_self):
-                return self._e.is_set()
+        def fUpdateSong(fStopped):
+            while 1:
+                if fStopped():
+                    break
+                song = self._r.get_current_song(fStopped)
+                if song:
+                    self._lblCurrentSong.set_text(song['artist']+' - '\
+                                                  +song['title'])
+                else:
+                    break
+                time.sleep(0.5)
 
-            def stop(_self):
-                print 'Thread stop() called.'
-                self._e.set()
+        tSong = LocalThread(self, fUpdateSong)
+        tSong.start()
 
-            def run(_self):
-                self.add_thread(_self)
-                while 1:
-                    if _self.stopped():
-                        break
-                    song = self._r.get_current_song()
-                    self._lblCurrentSong.set_text(song['artist'] + ' - ' + song['title'])
-                    time.sleep(1)
-                self.remove_thread(_self)
+        def fUpdateCounter(fStopped):
+            while 1:
+                if fStopped():
+                    break
+                song = self._r.get_current_song(fStopped)
+                print (song['end_time'] - song['start_time'], song['duration'])
+                timer = song['end_time'] - time.time()
+                print song['end_time']
+                self._lblCountdown.set_text(str(timer))
+                time.sleep(0.3)
 
-        t = LocalThread()
-        t.start()
+        tCounter = LocalThread(self, fUpdateCounter)
+        tCounter.start()
+
 
 
     def download_collection(self):
@@ -217,40 +223,22 @@ class ClientWindow(gtk.Window):
         self._status.pack_start(box)
         box.show_all()
 
-        class LocalThread(threading.Thread):
-            def __init__(_self):
-                threading.Thread.__init__(_self)
-                self._e = threading.Event()
 
-            def stopped(_self):
-                return self._e.is_set()
+        def fTarget(fStopped):
+            result = func(fStopped)
+            if result:
+                lblStatus.set_text(msgSuccess)
+            else:
+                lblStatus.set_text(msgFail)
+            btnCancel.set_sensitive(False)
+            time.sleep(2)
+            box.destroy()
 
-            def stop(_self):
-                print 'Thread stop() called.'
-                self._e.set()
-
-            def run(_self):
-                self.add_thread(_self)
-                print 'Thread run(), sleeping...'
-                #time.sleep(3)
-                print 'Thread run(), waking up.'
-
-                result = func(_self.stopped)
-                if result:
-                    lblStatus.set_text(msgSuccess)
-                else:
-                    lblStatus.set_text(msgFail)
-                btnCancel.set_sensitive(False)
-                time.sleep(2)
-                box.destroy()
-                self.remove_thread(_self)
-        t = LocalThread()
+        t = LocalThread(self, fTarget)
 
         def btnCancel_clicked(button):
             t.stop()
 
-        def fCancel():
-            t.stop()
         btnCancel.connect('clicked', btnCancel_clicked)
 
         t.start()
@@ -284,6 +272,25 @@ def create_treeview(columns, tree=False):
         c.add_attribute(renderer, 'text', i)
         tv.set_model(ls)
     return ls, tv
+
+class LocalThread(threading.Thread):
+    def __init__(self, window, target):
+        threading.Thread.__init__(self)
+        self._window = window
+        self._e = threading.Event()
+        self._target = target
+
+    def stopped(self):
+        return self._e.is_set()
+
+    def stop(self):
+        print 'Thread stop() called.'
+        self._e.set()
+
+    def run(self):
+        self._window.add_thread(self)
+        self._target(self.stopped)
+        self._window.remove_thread(self)
 
 
 if __name__ == '__main__':

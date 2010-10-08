@@ -31,12 +31,9 @@ class Retriever:
         b = net.command(s, ('get_buffer_size',))
         return b
 
-    def get_current_song(self):
-        print 'Requesting current song!'
+    def get_current_song(self, fStopped=None):
         s = self._socket()
-        print 'Created a socket'
-        song = net.command(s, ('get_current_song',))
-        print 'Song received'
+        song = net.command(s, ('get_current_song',), fStopped)
         return song
 
     def set_next_song(self, path):

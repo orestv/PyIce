@@ -87,13 +87,9 @@ class Server(threading.Thread):
             nbuf = f.read(self.get_buffer_size())
             s.send(nbuf)
 
-            self._current_song['end_time'] = time.time() + self._current_song['duration']/1000
-            print self._current_song['end_time']
-            print self._current_song['duration']/60000, ':', self._current_song['duration']%60
+            self._current_song['end_time'] = time.time() + self._current_song['duration']
             t = self._current_song['end_time']
-            print t
             t = time.localtime(t)
-            print t
             t = time.strftime('%H:%M:%S', t)
             print t
 
