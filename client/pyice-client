@@ -269,7 +269,10 @@ class ClientWindow(gtk.Window):
 
     def on_destroy(self, event):
         for thread in self._lsThreads:
+            print 'Stopping an orphaned thread...'
             thread.stop()
+            thread.join()
+            print 'Thread stopped'
         gtk.main_quit()
 
 def create_treeview(columns, tree=False):
