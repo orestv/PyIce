@@ -120,9 +120,12 @@ class ClientWindow(gtk.Window):
     def update_current_song(self):
 
         #def fUpdateSong(fStopped):
+        print 'Fetching current song...'
         with self._current_song_lock:
             self._current_song = self._r.get_current_song()
         if self._current_song:
+            print 'This song will end in ', self._current_song['end_time'] -\
+                time.time()
             def f():
                 self._lblCurrentSong.set_text(self._current_song['artist']+' - '\
                                               +self._current_song['title'])
@@ -134,18 +137,31 @@ class ClientWindow(gtk.Window):
 
     def start_counter(self):
         def fUpdateCounter(fStopped):
+            nMax = 50
+            nCount = 0
             while 1:
-                if fStopped():
-                    break
-                if self._current_song:
-                    with self._current_song_lock:
-                        timer = self._current_song['end_time'] - time.time()
+                self.update_current_song()
+                with self._current_song_lock:
+                    if self._current_song:
+                        end_time = self._current_song['end_time']
+                while 1:
+                    nCount += 1
+                    if fStopped():
+                        return
+                    if nCount >= nMax:
+                        nCount = 0
+                        with self._current_song_lock:
+                            if self._current_song:
+                                end_time = self._current_song['end_time']
+                    timer = self._current_song['end_time'] - time.time()
                     if timer < 0:
-                        self.update_current_song()
-                        #self.update_playlist()
+                        break
                     t = time.strftime('%M:%S', time.localtime(timer))
                     self._lblCountdown.set_text(t)
-                time.sleep(0.1)
+                    time.sleep(0.1)
+                        #self.update_playlist()
+                t = self.update_playlist()
+                t.join()
 
         tCounter = LocalThread(self, fUpdateCounter)
         tCounter.start()
@@ -169,13 +185,12 @@ class ClientWindow(gtk.Window):
                                                   [song['path'], song['title']])
             self._tvCollection.set_model(self._tsCollection)
             return True
-        self._run(f, 'Downloading collection...', \
+        return self._run(f, 'Downloading collection...', \
                   'Collection downloaded successfully!', \
                   'Failed to download collection!')
 
     def update_playlist(self):
         def f(fStopped):
-            self._tvPlaylist.set_sensitive(False)
             result = self._r.get_playlist(fStopped)
             if not result:
                 self._tvPlaylist.set_sensitive(True)
@@ -183,16 +198,17 @@ class ClientWindow(gtk.Window):
             pl = result
             pl = [(c['path'], c['tags']['artist'], c['tags']['title'], c['length']) for c in pl]
             def fGUI():
+                self._tvPlaylist.set_sensitive(False)
                 self._tvPlaylist.set_model(None)
+                self._lsPlaylist.clear()
                 for c in pl:
                     self._lsPlaylist.append(c)
                 self._tvPlaylist.set_model(self._lsPlaylist)
-            self._lsPlaylist.clear()
+                self._tvPlaylist.set_sensitive(True)
             gobject.idle_add(fGUI)
-            self._tvPlaylist.set_sensitive(True)
             return True
 
-        self._run(f, 'Downloading playlist...', \
+        return self._run(f, 'Downloading playlist...', \
                   'Playlist downloaded successfully!',
                   'Failed to download playlist!')
 
@@ -227,6 +243,7 @@ class ClientWindow(gtk.Window):
         btnCancel.connect('clicked', btnCancel_clicked)
 
         t.start()
+        return t
 
     def add_thread(self, thread):
         self._lsThreads.append(thread)
