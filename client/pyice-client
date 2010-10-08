@@ -151,14 +151,13 @@ class ClientWindow(gtk.Window):
 
 
     def start_counter(self):
+        def update_counter(text):
+            self._lblCountdown.set_text(text)
+
         def fUpdateCounter(fStopped):
             nMax = 25
-            nCount = 0
+            nCount = nMax
             while 1:
-                self.update_current_song()
-                with self._current_song_lock:
-                    if self._current_song:
-                        end_time = self._current_song['end_time']
                 while 1:
                     nCount += 1
                     if fStopped():
@@ -171,9 +170,11 @@ class ClientWindow(gtk.Window):
                                 end_time = self._current_song['end_time']
                     timer = self._current_song['end_time'] - time.time()
                     if timer < 0:
+                        nCount = nMax
                         break
                     t = time.strftime('%M:%S', time.localtime(timer))
-                    self._lblCountdown.set_text(t)
+                    gobject.idle_add(update_counter, t)
+
                     time.sleep(0.1)
                         #self.update_playlist()
                 t = self.update_playlist()
