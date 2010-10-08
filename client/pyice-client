@@ -11,7 +11,7 @@ class ClientWindow(gtk.Window):
         super(ClientWindow, self).__init__()
 
         self.connect('destroy', self.on_destroy)
-        self._fCancel = None
+        self._current_song = None
         self._lsThreads = []
 
         self._init_gui()
@@ -81,7 +81,7 @@ class ClientWindow(gtk.Window):
             iter = self._tsCollection.get_iter(row)
             path = self._tsCollection.get_value(iter, 0)
             self._r.set_next_song(path)
-            self.download_playlist()
+            self.update_playlist()
 
         self._tvCollection.connect('row-activated', tvCollection_row_activated)
 
@@ -115,8 +115,9 @@ class ClientWindow(gtk.Window):
                 print 'Connection refused'
                 return
             self.download_collection()
-            self.download_playlist()
+            self.update_playlist()
             self.update_current_song()
+            self.start_counter()
 
 
         self._btnCancel.connect('clicked',  btnCancel_clicked)
@@ -128,34 +129,31 @@ class ClientWindow(gtk.Window):
     def update_current_song(self):
 
         def fUpdateSong(fStopped):
-            while 1:
-                if fStopped():
-                    break
-                song = self._r.get_current_song(fStopped)
-                if song:
-                    self._lblCurrentSong.set_text(song['artist']+' - '\
-                                                  +song['title'])
-                else:
-                    break
-                time.sleep(0.5)
+            self._current_song = self._r.get_current_song(fStopped)
+            if self._current_song:
+                self._lblCurrentSong.set_text(self._current_song['artist']+' - '\
+                                              +self._current_song['title'])
 
         tSong = LocalThread(self, fUpdateSong)
         tSong.start()
 
+
+    def start_counter(self):
         def fUpdateCounter(fStopped):
             while 1:
                 if fStopped():
                     break
-                song = self._r.get_current_song(fStopped)
-                print (song['end_time'] - song['start_time'], song['duration'])
-                timer = song['end_time'] - time.time()
-                print song['end_time']
-                self._lblCountdown.set_text(str(timer))
+                if self._current_song:
+                    timer = self._current_song['end_time'] - time.time()
+                    if timer < 0:
+                        self.update_current_song()
+                        self.update_playlist()
+                    t = time.strftime('%M:%S', time.localtime(timer))
+                    self._lblCountdown.set_text(t)
                 time.sleep(0.3)
 
         tCounter = LocalThread(self, fUpdateCounter)
         tCounter.start()
-
 
 
     def download_collection(self):
@@ -188,7 +186,7 @@ class ClientWindow(gtk.Window):
                   'Collection downloaded successfully!', \
                   'Failed to download collection!')
 
-    def download_playlist(self):
+    def update_playlist(self):
         def f(fStopped):
             self._tvPlaylist.set_sensitive(False)
             result = self._r.get_playlist(fStopped)
