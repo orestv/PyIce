@@ -51,11 +51,13 @@ class Server(threading.Thread):
     def run(self):
         self._last_artists = []
         self._playlist = []
+        self._playlist_lock = threading.Lock()
         song = random.choice(self._songs)
         self._playlist.append(song)
         self._next_song()
-        for i in range(self._playlist_size):
-            self._playlist.append(self._pick_new_song())
+        with self._playlist_lock:
+            for i in range(self._playlist_size):
+                self._playlist.append(self._pick_new_song())
         self.play()
 
     def play(self):
@@ -126,7 +128,8 @@ class Server(threading.Thread):
 
     def set_next_song(self, path):
         if os.path.exists(path):
-            self._playlist = [path] + self._playlist
+            with self._playlist_lock:
+                self._playlist = [path] + self._playlist
 
     def _next_song(self):
         self._current_song['path'] = self._playlist[0]
@@ -140,9 +143,11 @@ class Server(threading.Thread):
             self._last_artists.append(artist)
             if self._last_artists and len(self._last_artists) > self._playlist_size:
                 self._last_artists.pop(0)
-        self._playlist.pop(0)
+        with self._playlist_lock:
+            self._playlist.pop(0)
         def f():
-            self._playlist.append(self._pick_new_song())
+            with self._playlist_lock:
+                self._playlist.append(self._pick_new_song())
         threading.Thread(target=f).start()
 
     def _pick_new_song(self):
@@ -157,7 +162,8 @@ class Server(threading.Thread):
         return choice
 
     def get_playlist(self):
-        return generate_playlist(self._playlist)
+        with self._playlist_lock:
+            return generate_playlist(self._playlist)
 
     def get_collection(self):
         return self._collection
