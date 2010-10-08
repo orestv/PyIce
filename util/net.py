@@ -18,7 +18,6 @@ def receive(s, fStopped=None, bClose=True, bufsize=4096):
         try:
             data = s.recv(bufsize)
         except:
-            print 'Exception in recv!'
             if fStopped and fStopped():
                 if bClose:
                     s.close()
@@ -56,11 +55,8 @@ def send(socket, data, fStopped=None, bClose=True):
     while 1:
         try:
             sent = socket.send(data[total:])
-            print 'Sent: %i' % (sent,)
             total += sent
-            print 'Total sent: %i' % (total,)
             if total >= size:
-                print 'Total >= size for sending'
                 if bClose:
                     socket.close()
                 return True
