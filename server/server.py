@@ -57,14 +57,13 @@ class Listener(threading.Thread):
                     return
 
     def client_closed(self, client):
-        print 'Client called self-destruct func'
         while client in self._clients:
-            print 'Removing client - self-destruction!'
             self._clients.remove(client)
 
     def kill_clients(self):
         for c in self._clients:
-            print 'Client...'
+            if c._data:
+                print 'Unclosed client with data ', c._data
             c.stop()
 
 
@@ -76,6 +75,7 @@ class Connector(threading.Thread):
         self._client.setblocking(0)
         self._server = server
         self._stop = threading.Event()
+        self._data = None
 
     def stop(self):
         self._stop.set()
@@ -84,34 +84,27 @@ class Connector(threading.Thread):
         return self._stop.isSet()
 
     def run(self):
-        print 'client connected'
-        print self._client
         try:
             data = net.receive(self._client, fStopped=self.stopped, bClose=False)
             if not data:
                 self._client.close()
             if data[0] == 'exit':
-                print 'Exit message received'
                 self._client.close()
 
             elif data[0] == 'get_buffer_size':
-                print 'Buffer size requested...'
                 bufsize = self._server.get_buffer_size()
                 net.send(self._client, bufsize, self.stopped, True)
 
             elif data[0] == 'set_buffer_size':
-                print 'Setting buffer size!'
                 buf = data[1]
                 self._server.set_buffer_size(buf)
                 net.send(self._client, True, self.stopped, True)
 
             elif data[0] == 'collection':
-                print 'Collection requested...'
                 col = self._server.get_collection()
                 net.send(self._client, col, self.stopped, True)
 
             elif data[0] == 'set_next_song':
-                print 'Setting next song to %s' % (data[1],)
                 self._server.set_next_song(data[1])
 
             elif data[0] == 'playlist':
@@ -119,13 +112,11 @@ class Connector(threading.Thread):
                 net.send(self._client, pl, self.stopped, True)
 
             elif data[0] == 'get_current_song':
-                print 'Sending current song'
                 song = self._server.get_current_song()
-                print song
-                net.send(self._client, song, None, True)
+                net.send(self._client, song)
             else:
-                print 'Invalid command received: ' + data
                 self._client.close()
+            self._data = data
 
         except AttributeError, e:
             print e

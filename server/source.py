@@ -128,7 +128,9 @@ class Server(threading.Thread):
 
     def set_next_song(self, path):
         if os.path.exists(path):
+            print 'Setting next song'
             with self._playlist_lock:
+                print 'Playlist lock acquired for next song'
                 self._playlist = [path] + self._playlist
 
     def _next_song(self):
@@ -162,7 +164,9 @@ class Server(threading.Thread):
         return choice
 
     def get_playlist(self):
+        print 'Playlist requested'
         with self._playlist_lock:
+            print 'Playlist lock acquired for playlist request'
             return generate_playlist(self._playlist)
 
     def get_collection(self):
