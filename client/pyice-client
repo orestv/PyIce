@@ -124,8 +124,6 @@ class ClientWindow(gtk.Window):
         with self._current_song_lock:
             self._current_song = self._r.get_current_song()
         if self._current_song:
-            print 'This song will end in ', self._current_song['end_time'] -\
-                time.time()
             def f():
                 self._lblCurrentSong.set_text(self._current_song['artist']+' - '\
                                               +self._current_song['title'])
@@ -137,7 +135,7 @@ class ClientWindow(gtk.Window):
 
     def start_counter(self):
         def fUpdateCounter(fStopped):
-            nMax = 50
+            nMax = 25
             nCount = 0
             while 1:
                 self.update_current_song()
@@ -150,6 +148,7 @@ class ClientWindow(gtk.Window):
                         return
                     if nCount >= nMax:
                         nCount = 0
+                        self.update_current_song()
                         with self._current_song_lock:
                             if self._current_song:
                                 end_time = self._current_song['end_time']
