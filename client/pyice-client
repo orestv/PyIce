@@ -131,8 +131,10 @@ class ClientWindow(gtk.Window):
         #def fUpdateSong(fStopped):
         self._current_song = self._r.get_current_song()
         if self._current_song:
-            self._lblCurrentSong.set_text(self._current_song['artist']+' - '\
-                                          +self._current_song['title'])
+            def f():
+                self._lblCurrentSong.set_text(self._current_song['artist']+' - '\
+                                              +self._current_song['title'])
+            gobject.idle_add(f)
 
         #tSong = LocalThread(self, fUpdateSong)
         #tSong.start()
