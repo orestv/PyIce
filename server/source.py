@@ -134,6 +134,7 @@ class Server(threading.Thread):
                 self._playlist = [path] + self._playlist
 
     def _next_song(self):
+        print 'Auto-setting next song'
         self._current_song['path'] = self._playlist[0]
         self._current_song['start_time'] = time.time()
         artist = get_tag(self._current_song['path'], 'artist')
@@ -146,6 +147,7 @@ class Server(threading.Thread):
             if self._last_artists and len(self._last_artists) > self._playlist_size:
                 self._last_artists.pop(0)
         with self._playlist_lock:
+            print 'Playlist lock acquired for auto-setting next song'
             self._playlist.pop(0)
         def f():
             with self._playlist_lock:

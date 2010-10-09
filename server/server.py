@@ -125,7 +125,9 @@ class Connector(threading.Thread):
                 net.send(self._client, song)
             else:
                 self._client.close()
+
             self._data = data
+            self._client.close()
 
         except AttributeError, e:
             print e

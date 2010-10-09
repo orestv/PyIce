@@ -228,6 +228,7 @@ class ClientWindow(gtk.Window):
                                 end_time = self._current_song['end_time']
                     timer = self._current_song['end_time'] - time.time()
                     if timer < 0:
+                        time.sleep(1)
                         nCount = nMax
                         break
                     t = format_length(timer)
