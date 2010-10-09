@@ -18,7 +18,7 @@ class Retriever:
 
     def get_playlist(self, fStopped=None):
         s = self._socket()
-        pl = net.command(s, ('playlist',), fStopped)
+        pl = net.command(s, ('get_playlist',), fStopped)
         return pl
 
     def get_collection(self, fStopped=None):
@@ -44,9 +44,20 @@ class Retriever:
     def set_buffer_size(self, buffer_size):
         s = self._socket()
         #ret = net.command(s, 'set_buffer_size:' )
-        ret = net.command(s, 'set_buffer_size:%i' % (buffer_size,))
-        ret = pack.unpack(ret)
+        ret = net.command(s, ('set_buffer_size', buffer_size))
         return ret
+
+    def set_playlist(self, playlist):
+        s = self._socket()
+        ret = net.command(s, ('set_playlist', playlist))
+        return ret
+
+    def insert_songs(self, index, songs):
+        s = self._socket()
+        print 'Socket created...'
+        ret = net.command(s, ('insert_songs', index, songs))
+        return ret
+    
 
 def open_socket(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

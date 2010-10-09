@@ -169,6 +169,14 @@ class Server(threading.Thread):
             print 'Playlist lock acquired for playlist request'
             return generate_playlist(self._playlist)
 
+    def insert_songs_into_playlist(self, index, songs):
+        with self._playlist_lock:
+            self._playlist[index:index] = songs
+
+    def set_playlist(self, playlist):
+        with self._playlist_lock:
+            self._playlist = playlist
+
     def get_collection(self):
         return self._collection
 
@@ -233,12 +241,17 @@ def generate_collection(lstFiles):
     result = {}
     for filename in lstFiles:
         tags = get_tags(filename, ['artist', 'album', 'title'])
+        file = open(filename)
+        mf = mad.MadFile(file)
+        length = mf.total_time() / 1000
+        file.close()
         artist, album, title = tags['artist'], tags['album'], tags['title']
         if not result.has_key(artist):
             result[artist] = {}
         if not result[artist].has_key(album):
             result[artist][album] = []
-        result[artist][album].append({'path': filename, 'title': title})
+        result[artist][album].append({'path': filename, 'title': title,
+                                      'length': length})
     return result
 
 #    print (parent, dirs, files)

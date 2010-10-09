@@ -55,12 +55,25 @@ class ClientWindow(gtk.Window):
         columns = [{'title': 'Path',
                     'type': str, 'visible': False},
                    {'title': 'Song',
+                    'type': str, 'visible': True},
+                   {'title': 'Length',
                     'type': str, 'visible': True}
                   ]
 
         self._tsCollection, self._tvCollection = \
                 create_treeview(columns, True)
+        self._tvCollection.enable_model_drag_source(
+            gtk.gdk.BUTTON1_MASK,[('text/plain', 0, 0)],
+            gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_COPY)
 
+        def drag_data_get(treeview, context, selection, info, timestamp):
+            sel = treeview.get_selection()
+            model, iter = sel.get_selected()
+            data = model.get_value(iter, 0)
+            selection.set(selection.target, 8, data)
+            return
+
+        self._tvCollection.connect('drag-data-get', drag_data_get)
 
         columns = [{'title': 'Path',
                     'type': str, 'visible': False},
@@ -73,6 +86,37 @@ class ClientWindow(gtk.Window):
 
         self._lsPlaylist, self._tvPlaylist = \
                 create_treeview(columns)
+        self._tvPlaylist.enable_model_drag_dest(
+            [('text/plain', 0, 0)], gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_COPY)
+
+        def drag_data_received(treeview, context, x, y, selection, info,
+                               timestamp):
+            drop_info = treeview.get_dest_row_at_pos(x, y)
+            data = selection.data
+            print 'Drag-drop received'
+            if not data:
+                return
+            print 'DnD data is %s' % (data,)
+            index, position = drop_info
+            print 'DnD: dropped at ', index
+            print 'DnD: position: ', position
+            if not index:
+                model = treeview.get_model()
+                nSongs = model.iter_n_children(None)
+                index = nSongs
+            else:
+                index = index[0]
+                if position in (gtk.TREE_VIEW_DROP_AFTER,
+                                gtk.TREE_VIEW_DROP_INTO_OR_AFTER):
+                    index += 1
+            print 'DnD: inserting into ', index
+            result = self._r.insert_songs(index, (data,))
+            print 'DnD: inserted? ', result
+            self.update_playlist()
+            return
+
+
+        self._tvPlaylist.connect('drag-data-received', drag_data_received)
 
         btnReloadCollection = gtk.Button('Reload')
 
@@ -135,6 +179,15 @@ class ClientWindow(gtk.Window):
         self.add(bxMain)
         self.show_all()
 
+    def upload_playlist(self):
+        row = self._lsPlaylist.get_iter_first()
+        pl = []
+        while row:
+            pl.append(self._lsPlaylist.get_value(row, 0))
+            row = self._lsPlaylist.iter_next(row)
+
+        print pl
+
     def update_current_song(self):
 
         #def fUpdateSong(fStopped):
@@ -172,7 +225,7 @@ class ClientWindow(gtk.Window):
                     if timer < 0:
                         nCount = nMax
                         break
-                    t = time.strftime('%M:%S', time.localtime(timer))
+                    t = format_length(timer)
                     gobject.idle_add(update_counter, t)
 
                     time.sleep(0.1)
@@ -193,13 +246,14 @@ class ClientWindow(gtk.Window):
             self._tvCollection.set_model(None)
             for artist in col:
                 rwArtist = self._tsCollection.append(None, 
-                                                ['', artist])
+                                                ['', artist, ''])
                 for album in col[artist]:
                     rwAlbum = self._tsCollection.append(rwArtist,
-                                                        ['', album])
+                                                        ['', album, ''])
                     for song in col[artist][album]:
                         self._tsCollection.append(rwAlbum,
-                                                  [song['path'], song['title']])
+                                                  [song['path'], song['title'],
+                                                  format_length(song['length'])])
             self._tvCollection.set_model(self._tsCollection)
             return True
         return self._run(f, 'Downloading collection...', \
@@ -314,6 +368,9 @@ class LocalThread(threading.Thread):
         self._target(self.stopped)
         self._window.remove_thread(self)
 
+def format_length(length):
+    t = time.strftime('%M:%S', time.localtime(length))
+    return t
 
 if __name__ == '__main__':
     gtk.gdk.threads_init()

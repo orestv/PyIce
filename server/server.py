@@ -107,9 +107,18 @@ class Connector(threading.Thread):
             elif data[0] == 'set_next_song':
                 self._server.set_next_song(data[1])
 
-            elif data[0] == 'playlist':
+            elif data[0] == 'insert_songs':
+                self._server.insert_songs_into_playlist(data[1], data[2])
+                net.send(self._client, True, self.stopped, True)
+
+            elif data[0] == 'get_playlist':
                 pl = self._server.get_playlist()
                 net.send(self._client, pl, self.stopped, True)
+
+            elif data[0] == 'set_playlist':
+                pl = data[1]
+                self._server.set_playlist(pl)
+                net.send(self._client, True, self.stopped, True)
 
             elif data[0] == 'get_current_song':
                 song = self._server.get_current_song()
