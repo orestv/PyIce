@@ -133,7 +133,7 @@ class ClientWindow(gtk.Window):
                 if position in (gtk.TREE_VIEW_DROP_AFTER,
                                 gtk.TREE_VIEW_DROP_INTO_OR_AFTER):
                     index += 1
-            if from_index and from_index < index:
+            if from_path and from_index < index:
                 index -= 1
 
             self._r.insert_songs(index, (data,))
