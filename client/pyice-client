@@ -82,7 +82,12 @@ class ClientWindow(gtk.Window):
                    {'title': 'Title',
                     'type': str, 'visible': True},
                    {'title': 'Length',
-                    'type': str, 'visible': True}]
+                    'type': str, 'visible': True},
+                   {'title': 'Start time',
+                    'type': str, 'visible': True},
+                   {'title': 'End time',
+                    'type': str, 'visible': True}
+                  ]
 
         self._lsPlaylist, self._tvPlaylist = \
                 create_treeview(columns)
@@ -267,13 +272,21 @@ class ClientWindow(gtk.Window):
                 self._tvPlaylist.set_sensitive(True)
                 return False
             pl = result
-            pl = [(c['path'], c['tags']['artist'], c['tags']['title'], c['length']) for c in pl]
             def fGUI():
+                #next song will start as soon as the curent ends
+                start_time = self._current_song['end_time'] 
+                print start_time
                 self._tvPlaylist.set_sensitive(False)
                 self._tvPlaylist.set_model(None)
                 self._lsPlaylist.clear()
                 for c in pl:
-                    self._lsPlaylist.append(c)
+                    self._lsPlaylist.append(
+                        [c['path'], c['tags']['artist'], c['tags']['title'],
+                         format_length(c['length']), 
+                         format_time(start_time), 
+                         format_time(c['length']+start_time)])
+                    start_time += c['length']
+
                 self._tvPlaylist.set_model(self._lsPlaylist)
                 self._tvPlaylist.set_sensitive(True)
             gobject.idle_add(fGUI)
@@ -370,6 +383,10 @@ class LocalThread(threading.Thread):
 
 def format_length(length):
     t = time.strftime('%M:%S', time.localtime(length))
+    return t
+
+def format_time(length):
+    t = time.strftime('%H:%M:%S', time.localtime(length))
     return t
 
 if __name__ == '__main__':

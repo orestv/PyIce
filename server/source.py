@@ -232,7 +232,6 @@ def generate_playlist(lstFiles):
         mf = mad.MadFile(file)
         length = mf.total_time() / 1000
         file.close()
-        length = time.strftime('%M:%S', time.gmtime(length))
         result.append({'path': filename, 'tags': tags, 'length': length})
     return result
 
