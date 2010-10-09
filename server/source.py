@@ -23,22 +23,27 @@ class Source:
 
 
 class Server(threading.Thread):
-    _playlist_size = 10
     _current_song = {}
 
-    def __init__(self, path, mount, port=50000, bufsize=32768):
+    def __init__(self, path, mount, port, bufsize=32768, playlist_size = 10,
+                 song_list_size = 80):
         threading.Thread.__init__(self)
         self.set_buffer_size(bufsize)
         self._mount = mount
         self._listener = server.Listener(self, port)
         self._listener.start()
+        self._playlist_size = playlist_size
+        self._song_list_size = song_list_size
         path = unicode(path)
         self._songs = find_all_music_files(path)
         n = time.time()
         def f():
             print 'Generating collection...'
-            self._collection = generate_collection(self._songs)
-            print 'Collection generated, %f seconds spent' % (time.time()-n,)
+            self._collection = generate_collection(self._songs, self.stopped)
+            if self._collection:
+                print 'Collection generated, %f seconds spent' % (time.time()-n,)
+            else:
+                print 'Collection generation failed'
         threading.Thread(target=f).start()
         self._stop = threading.Event()
 
@@ -51,14 +56,21 @@ class Server(threading.Thread):
     def run(self):
         self._last_artists = []
         self._playlist = []
+        self._song_list = []
         self._playlist_lock = threading.Lock()
         song = random.choice(self._songs)
         self._playlist.append(song)
         self._next_song()
+        threading.Thread(target=self.fill_playlist).start()
+        self.play()
+
+    def fill_playlist(self):
         with self._playlist_lock:
             for i in range(self._playlist_size):
+                if self.stopped():
+                    return
                 self._playlist.append(self._pick_new_song())
-        self.play()
+
 
     def play(self):
         s = shout.Shout()
@@ -135,6 +147,9 @@ class Server(threading.Thread):
 
     def _next_song(self):
         print 'Auto-setting next song'
+        if self._current_song:
+            self._song_list.insert(0, self._current_song['path'])
+        del self._song_list[self._song_list_size:]
         self._current_song['path'] = self._playlist[0]
         self._current_song['start_time'] = time.time()
         artist = get_tag(self._current_song['path'], 'artist')
@@ -161,7 +176,8 @@ class Server(threading.Thread):
         while not choice:
             choice = random.choice(self._songs)
             artist = get_tag(choice, 'artist')
-            if not artist or artist in artists:
+            if (not artist) or (artist in artists) or (
+                choice in self._song_list):
                 choice = None
         return choice
 
@@ -238,9 +254,11 @@ def generate_playlist(lstFiles):
     return result
 
 
-def generate_collection(lstFiles):
+def generate_collection(lstFiles, fStopped=None):
     result = {}
     for filename in lstFiles:
+        if fStopped and fStopped():
+            return None
         tags = get_tags(filename, ['artist', 'album', 'title'])
         file = open(filename)
         mf = mad.MadFile(file)
