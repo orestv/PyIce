@@ -105,9 +105,9 @@ class Server(threading.Thread):
                     self._listener.stop()
                     return
                 buf = nbuf
-                nbuf = f.read(self.get_buffer_size())
                 if not buf:
                     break
+                nbuf = f.read(self.get_buffer_size())
                 s.send(buf)
                 delay = s.delay()/1000.0
                 delay = delay * 0.3
