@@ -192,10 +192,13 @@ class Server(threading.Thread):
             self._playlist[index:index] = songs
 
     def delete_songs_from_playlist(self, indices): 
-        indices = indices.sort(reverse=True)
-        with self._playlist_lock:
-            for n in indices:
-                del self._playlist[n]
+        indices.sort(reverse=True)
+        try:
+            with self._playlist_lock:
+                for n in indices:
+                    del self._playlist[n]
+        except TypeError, e:
+            print e
 
     def set_playlist(self, playlist):
         with self._playlist_lock:

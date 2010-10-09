@@ -66,14 +66,14 @@ class ClientWindow(gtk.Window):
             gtk.gdk.BUTTON1_MASK,[('text/plain', 0, 0)],
             gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_COPY)
 
-        def drag_data_get(treeview, context, selection, info, timestamp):
+        def collection_drag_data_get(treeview, context, selection, info, timestamp):
             sel = treeview.get_selection()
             model, iter = sel.get_selected()
             data = model.get_value(iter, 0)
             selection.set(selection.target, 8, data)
             return
 
-        self._tvCollection.connect('drag-data-get', drag_data_get)
+        self._tvCollection.connect('drag-data-get', collection_drag_data_get)
 
         columns = [{'title': 'Path',
                     'type': str, 'visible': False},
@@ -88,25 +88,44 @@ class ClientWindow(gtk.Window):
                    {'title': 'End time',
                     'type': str, 'visible': True}
                   ]
-
+        
         self._lsPlaylist, self._tvPlaylist = \
                 create_treeview(columns)
+        self._tvPlaylist.set_reorderable(True)
+        self._lsPlaylist._deleted_at = None
+
         self._tvPlaylist.enable_model_drag_dest(
-            [('text/plain', 0, 0)], gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_COPY)
+            [('text/plain', 0, 0)],
+            gtk.gdk.ACTION_DEFAULT|gtk.gdk.ACTION_COPY|gtk.gdk.ACTION_MOVE)
+        self._tvPlaylist.enable_model_drag_source(
+            gtk.gdk.BUTTON1_MASK, [('text/plain',0,0)],
+            gtk.gdk.ACTION_MOVE)
+        self._lsPlaylist._deleted_handle =\
+            self._lsPlaylist.connect('row-deleted', self.playlist_row_deleted)
+
 
         def drag_data_received(treeview, context, x, y, selection, info,
                                timestamp):
             drop_info = treeview.get_dest_row_at_pos(x, y)
+            model = treeview.get_model()
+
+            from_path = model._deleted_at
+            if from_path:
+                model._deleted_at = None
+                from_index = from_path[0]
             data = selection.data
+
             print 'Drag-drop received'
             if not data:
                 return
             print 'DnD data is %s' % (data,)
-            index, position = drop_info
+            if not drop_info:
+                index, position = None, None
+            else:
+                index, position = drop_info
             print 'DnD: dropped at ', index
             print 'DnD: position: ', position
             if not index:
-                model = treeview.get_model()
                 nSongs = model.iter_n_children(None)
                 index = nSongs
             else:
@@ -114,14 +133,27 @@ class ClientWindow(gtk.Window):
                 if position in (gtk.TREE_VIEW_DROP_AFTER,
                                 gtk.TREE_VIEW_DROP_INTO_OR_AFTER):
                     index += 1
-            print 'DnD: inserting into ', index
-            result = self._r.insert_songs(index, (data,))
-            print 'DnD: inserted? ', result
+            if from_index and from_index < index:
+                index -= 1
+
+            self._r.insert_songs(index, (data,))
             self.update_playlist()
             return
 
+        def playlist_drag_data_get(treeview, context, selection, info, timestamp):
+            sel = treeview.get_selection()
+            model, iter = sel.get_selected()
+            path = model.get_path(iter)
+
+            model._deleted_at = path
+
+            data = model.get_value(iter, 0)
+            selection.set(selection.target, 8, data)
+            model.remove(iter)
+            return
 
         self._tvPlaylist.connect('drag-data-received', drag_data_received)
+        self._tvPlaylist.connect('drag-data-get', playlist_drag_data_get)
 
         btnReloadCollection = gtk.Button('Reload')
 
@@ -184,14 +216,10 @@ class ClientWindow(gtk.Window):
         self.add(bxMain)
         self.show_all()
 
-    def upload_playlist(self):
-        row = self._lsPlaylist.get_iter_first()
-        pl = []
-        while row:
-            pl.append(self._lsPlaylist.get_value(row, 0))
-            row = self._lsPlaylist.iter_next(row)
-
-        print pl
+    def playlist_row_deleted(self, model, path):
+        print 'Deleted at ', path
+        self._r.delete_songs(list(path))
+        #self.update_playlist()
 
     def update_current_song(self):
 
@@ -273,6 +301,7 @@ class ClientWindow(gtk.Window):
 
     def update_playlist(self):
         def f(fStopped):
+            self._lsPlaylist.disconnect(self._lsPlaylist._deleted_handle)
             result = self._r.get_playlist(fStopped)
             if not result:
                 self._tvPlaylist.set_sensitive(True)
@@ -295,6 +324,8 @@ class ClientWindow(gtk.Window):
 
                 self._tvPlaylist.set_model(self._lsPlaylist)
                 self._tvPlaylist.set_sensitive(True)
+                self._lsPlaylist._deleted_handle =\
+                    self._lsPlaylist.connect('row-deleted', self.playlist_row_deleted)
             gobject.idle_add(fGUI)
             return True
 
@@ -322,7 +353,12 @@ class ClientWindow(gtk.Window):
             else:
                 lblStatus.set_text(msgFail)
             btnCancel.set_sensitive(False)
-            time.sleep(2)
+            try:
+                for i in range(200):
+                    time.sleep(0.01)
+            except:
+                if fStopped and fStopped():
+                    return
             box.destroy()
 
         t = LocalThread(self, fTarget)
@@ -345,7 +381,7 @@ class ClientWindow(gtk.Window):
         for thread in self._lsThreads:
             print 'Stopping an orphaned thread...'
             thread.stop()
-            thread.join()
+            #thread.join()
             print 'Thread stopped'
         gtk.main_quit()
 

@@ -54,8 +54,12 @@ class Retriever:
 
     def insert_songs(self, index, songs):
         s = self._socket()
-        print 'Socket created...'
         ret = net.command(s, ('insert_songs', index, songs))
+        return ret
+    
+    def delete_songs(self, indices):
+        s = self._socket()
+        ret = net.command(s, ('delete_songs', indices))
         return ret
     
 
