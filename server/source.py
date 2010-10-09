@@ -28,6 +28,7 @@ class Server(threading.Thread):
     def __init__(self, path, mount, port, bufsize=32768, playlist_size = 10,
                  song_list_size = 80):
         threading.Thread.__init__(self)
+        self._stop = threading.Event()
         self.set_buffer_size(bufsize)
         self._mount = mount
         self._listener = server.Listener(self, port)
@@ -45,7 +46,6 @@ class Server(threading.Thread):
             else:
                 print 'Collection generation failed'
         threading.Thread(target=f).start()
-        self._stop = threading.Event()
 
     def stop(self):
         self._stop.set()
@@ -190,6 +190,12 @@ class Server(threading.Thread):
     def insert_songs_into_playlist(self, index, songs):
         with self._playlist_lock:
             self._playlist[index:index] = songs
+
+    def delete_songs_from_playlist(self, indices): 
+        indices = indices.sort(reverse=True)
+        with self._playlist_lock:
+            for n in indices:
+                del self._playlist[n]
 
     def set_playlist(self, playlist):
         with self._playlist_lock:

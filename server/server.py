@@ -111,6 +111,10 @@ class Connector(threading.Thread):
                 self._server.insert_songs_into_playlist(data[1], data[2])
                 net.send(self._client, True, self.stopped, True)
 
+            elif data[0] == 'delete_songs':
+                self._server.delete_songs_from_playlist(data[1])
+                net.send(self._client, True, self.stopped, True)
+
             elif data[0] == 'get_playlist':
                 pl = self._server.get_playlist()
                 net.send(self._client, pl, self.stopped, True)
