@@ -127,8 +127,13 @@ class Connector(threading.Thread):
             elif data[0] == 'get_current_song':
                 song = self._server.get_current_song()
                 net.send(self._client, song)
+
+            elif data[0] == 'get_time_to_end':
+                t = self._server.get_time_to_end()
+                net.send(self._client, t)
             else:
                 self._client.close()
+
 
             self._data = data
             self._client.close()

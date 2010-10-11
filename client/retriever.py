@@ -61,6 +61,11 @@ class Retriever:
         s = self._socket()
         ret = net.command(s, ('delete_songs', indices))
         return ret
+
+    def get_time_till_song_end(self):
+        s = self._socket()
+        ret = net.command(s, ('get_time_till_song_end',))
+        return ret
     
 
 def open_socket(host, port):

@@ -87,6 +87,7 @@ class Server(threading.Thread):
         while 1:
             print '---------------------------------------------'
             print 'Now playing: ', self._current_song['path']
+            t0 = time.time()
             artist = get_tag(self._current_song['path'], 'artist')
             if artist:
                 artist = artist.encode('utf-8')
@@ -119,8 +120,11 @@ class Server(threading.Thread):
                 buf = nbuf
                 if not buf:
                     break
-                nbuf = f.read(self.get_buffer_size())
+                if t0:
+                    print 'Time spent for setting data: ', time.time()-t0
+                    t0 = None
                 s.send(buf)
+                nbuf = f.read(self.get_buffer_size())
                 delay = s.delay()/1000.0
                 delay = delay * 0.3
                 if delay > 0.2:
@@ -146,7 +150,8 @@ class Server(threading.Thread):
                 self._playlist = [path] + self._playlist
 
     def _next_song(self):
-        print 'Auto-setting next song'
+        print 'Auto-setting next song at ', time.time()
+        t0 = time.time()
         if self._current_song:
             self._song_list.insert(0, self._current_song['path'])
         del self._song_list[self._song_list_size:]
@@ -168,6 +173,8 @@ class Server(threading.Thread):
             with self._playlist_lock:
                 self._playlist.append(self._pick_new_song())
         threading.Thread(target=f).start()
+        print 'Next song set at ', time.time()
+        print 'We spent ', time.time()-t0, ' seconds setting the next song'
 
     def _pick_new_song(self):
         artists = [get_tag(f, 'artist') for f in self._playlist]
@@ -209,6 +216,10 @@ class Server(threading.Thread):
 
     def get_current_song(self):
         return self._current_song
+
+    def get_time_to_end(self):
+        with self._current_song_lock:
+            return self._current_song['end_time'] - time.time()
 
 def get_tag(path, tagname):
    try:
