@@ -62,9 +62,9 @@ class Retriever:
         ret = net.command(s, ('delete_songs', indices))
         return ret
 
-    def get_time_till_song_end(self):
+    def get_time_to_end(self, fStopped):
         s = self._socket()
-        ret = net.command(s, ('get_time_till_song_end',))
+        ret = net.command(s, ('get_time_to_end',), fStopped)
         return ret
     
 

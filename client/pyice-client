@@ -248,13 +248,12 @@ class ClientWindow(gtk.Window):
                     nCount += 1
                     if fStopped():
                         return
-                    if False and nCount >= nMax:
+                    if nCount >= nMax:
                         nCount = 0
                         self.update_current_song()
-                        with self._current_song_lock:
-                            if self._current_song:
-                                end_time = self._current_song['end_time']
-                    timer = self._current_song['end_time'] - time.time()
+                    timer = self._r.get_time_to_end(fStopped)
+                    if fStopped():
+                        return
                     if timer < 0:
                         nCount = nMax
                         break
@@ -263,11 +262,14 @@ class ClientWindow(gtk.Window):
 
                     time.sleep(0.1)
                         #self.update_playlist()
-                s = self._current_song
-                s1 = self._r.get_current_song()
-                while s1 == s:
+                with self._current_song_lock:
+                    s = self._current_song
                     s1 = self._r.get_current_song()
-                    time.sleep(0.5)
+                    while s1 == s:
+                        if fStopped():
+                            return
+                        s1 = self._r.get_current_song()
+                        time.sleep(0.5)
                 self.update_current_song()
                 t = self.update_playlist()
                 #t.join()
