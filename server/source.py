@@ -218,8 +218,7 @@ class Server(threading.Thread):
         return self._current_song
 
     def get_time_to_end(self):
-        with self._current_song_lock:
-            return self._current_song['end_time'] - time.time()
+        return self._current_song['end_time'] - time.time()
 
 def get_tag(path, tagname):
    try:
