@@ -217,7 +217,6 @@ class ClientWindow(gtk.Window):
         self.show_all()
 
     def playlist_row_deleted(self, model, path):
-        print 'Deleted at ', path
         self._r.delete_songs(list(path))
         #self.update_playlist()
 
