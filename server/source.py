@@ -66,7 +66,7 @@ class Server(threading.Thread):
 
     def fill_playlist(self):
         with self._playlist_lock:
-            for i in range(self._playlist_size):
+            while len(self._playlist) < self._playlist_size:
                 if self.stopped():
                     return
                 self._playlist.append(self._pick_new_song())

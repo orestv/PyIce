@@ -18,7 +18,11 @@ class ClientWindow(gtk.Window):
         self._init_gui()
 
     def _init_gui(self):
-        self.set_size_request(600, 400)
+        def set_button_icon(button, stock):
+            img = gtk.Image()
+            img.set_from_stock(stock, gtk.ICON_SIZE_BUTTON)
+            button.add(img)
+        self.set_size_request(800, 400)
         self.set_position(gtk.WIN_POS_CENTER)
         bxMain = gtk.VBox()
 
@@ -50,7 +54,7 @@ class ClientWindow(gtk.Window):
 
         bxMain.pack_start(bxCurrent, expand=False, fill=False, padding=15)
 
-        tbl = gtk.Table(3,4,False)
+        tbl = gtk.Table(3,5,False)
 
         columns = [{'title': 'Path',
                     'type': str, 'visible': False},
@@ -155,7 +159,8 @@ class ClientWindow(gtk.Window):
         self._tvPlaylist.connect('drag-data-received', drag_data_received)
         self._tvPlaylist.connect('drag-data-get', playlist_drag_data_get)
 
-        btnReloadCollection = gtk.Button('Reload')
+        btnReloadCollection = gtk.Button()
+        set_button_icon(btnReloadCollection, gtk.STOCK_REFRESH)
 
         def btnReloadCollection_clicked(button):
             self.download_collection()
@@ -176,7 +181,8 @@ class ClientWindow(gtk.Window):
 
         self._tvCollection.connect('row-activated', tvCollection_row_activated)
 
-        btnReloadPlaylist = gtk.Button('Reload')
+        btnReloadPlaylist = gtk.Button()
+        set_button_icon(btnReloadPlaylist, gtk.STOCK_REFRESH)
 
         def btnReloadPlaylist_clicked(button):
             self.update_playlist()
@@ -188,6 +194,41 @@ class ClientWindow(gtk.Window):
         tbl.attach(gtk.Label('Playlist'), 2, 3, 0, 1, 0, 0)
         tbl.attach(btnReloadPlaylist, 3, 4, 0, 1, 0, 0)
         tbl.attach(sw, 2, 4, 1, 2)
+
+        btnReloadOptions = gtk.Button()
+        set_button_icon(btnReloadOptions, gtk.STOCK_REFRESH)
+
+        btnReloadOptions.connect('clicked', lambda button: self.fetch_options())
+        tbl.attach(btnReloadOptions, 4, 5, 0, 1, 0, 0)
+
+        tblOpts = gtk.Table(6, 3, False)
+
+        self._eBufSize = gtk.Entry()
+        btnSetBufSize = gtk.Button('Set')
+        def btnSetBufSize_clicked(button):
+            def f():
+                try:
+                    gobject.idle_add(lambda: button.set_sensitive(False))
+                    nBufferSize = int(self._eBufSize.get_text())
+                    ret = self._r.set_buffer_size(nBufferSize)
+                    if ret:
+                        print 'success!'
+                    else:
+                        print 'fuck!'
+                except:
+                    print 'fuck! Exception'
+                finally:
+                    gobject.idle_add(lambda:button.set_sensitive(True))
+            threading.Thread(target=f).start()
+        btnSetBufSize.connect('clicked', btnSetBufSize_clicked)
+
+        tblOpts.attach(gtk.Label('Buffer size'), 0, 1, 0, 1, yoptions=0)
+        tblOpts.attach(self._eBufSize, 1, 2, 0, 1, yoptions=0)
+        tblOpts.attach(btnSetBufSize, 2, 3, 0, 1, yoptions=0)
+
+
+
+        tbl.attach(tblOpts, 4, 5, 1, 2)
 
         tbl.set_sensitive(False)
 
@@ -209,12 +250,20 @@ class ClientWindow(gtk.Window):
             self.update_playlist()
             self.update_current_song()
             self.start_counter()
+            self.fetch_options()
 
 
         btnConnect.connect('clicked', btnConnect_clicked)
 
         self.add(bxMain)
         self.show_all()
+
+    def fetch_options(self):
+        def f():
+            nBufSize = self._r.get_buffer_size()
+            gobject.idle_add(lambda: self._eBufSize.set_text(str(nBufSize)))
+
+        threading.Thread(target=f).start()
 
     def playlist_row_deleted(self, model, path):
         self._r.delete_songs(list(path))

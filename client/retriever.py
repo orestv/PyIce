@@ -43,7 +43,6 @@ class Retriever:
 
     def set_buffer_size(self, buffer_size):
         s = self._socket()
-        #ret = net.command(s, 'set_buffer_size:' )
         ret = net.command(s, ('set_buffer_size', buffer_size))
         return ret
 
