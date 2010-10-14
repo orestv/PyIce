@@ -84,6 +84,7 @@ class Connector(threading.Thread):
         return self._stop.isSet()
 
     def run(self):
+        send = lambda d : net.send(self._client, d, self.stopped, True)
         try:
             data = net.receive(self._client, fStopped=self.stopped, bClose=False)
             if not data:
@@ -93,44 +94,50 @@ class Connector(threading.Thread):
 
             elif data[0] == 'get_buffer_size':
                 bufsize = self._server.get_buffer_size()
-                net.send(self._client, bufsize, self.stopped, True)
+                send(bufsize)
 
             elif data[0] == 'set_buffer_size':
                 buf = data[1]
                 self._server.set_buffer_size(buf)
-                net.send(self._client, True, self.stopped, True)
+                send(True)
 
             elif data[0] == 'collection':
                 col = self._server.get_collection()
-                net.send(self._client, col, self.stopped, True)
+                send(col)
 
             elif data[0] == 'set_next_song':
                 self._server.set_next_song(data[1])
+                send(True)
 
             elif data[0] == 'insert_songs':
                 self._server.insert_songs_into_playlist(data[1], data[2])
-                net.send(self._client, True, self.stopped, True)
+                send(True)
 
             elif data[0] == 'delete_songs':
                 self._server.delete_songs_from_playlist(data[1])
-                net.send(self._client, True, self.stopped, True)
+                send(True)
 
             elif data[0] == 'get_playlist':
                 pl = self._server.get_playlist()
-                net.send(self._client, pl, self.stopped, True)
+                send(pl)
 
             elif data[0] == 'set_playlist':
                 pl = data[1]
                 self._server.set_playlist(pl)
-                net.send(self._client, True, self.stopped, True)
+                send(True)
 
             elif data[0] == 'get_current_song':
                 song = self._server.get_current_song()
-                net.send(self._client, song)
+                send(song)
 
             elif data[0] == 'get_time_to_end':
                 t = self._server.get_time_to_end()
-                net.send(self._client, t)
+                send(t)
+
+            elif data[0] == 'fill_playlist':
+                self._server.fill_playlist()
+                send(True)
+
             else:
                 self._client.close()
 
