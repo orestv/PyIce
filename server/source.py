@@ -32,7 +32,6 @@ class Server(threading.Thread):
         self.set_buffer_size(bufsize)
         self._mount = mount
         self._listener = server.Listener(self, port)
-        self._listener.start()
         self._playlist_size = playlist_size
         self._song_list_size = song_list_size
         path = unicode(path)
@@ -46,6 +45,7 @@ class Server(threading.Thread):
             else:
                 print 'Collection generation failed'
         threading.Thread(target=f).start()
+        self._listener.start()
 
     def stop(self):
         self._stop.set()
