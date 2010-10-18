@@ -16,9 +16,9 @@ class Retriever:
     def _socket(self):
         return open_socket(self._host, self._port)
 
-    def get_playlist(self, fStopped=None):
+    def get_playlist(self, fStopped=None, fUpdate=None):
         s = self._socket()
-        pl = net.command(s, ('get_playlist',), fStopped)
+        pl = net.command(s, ('get_playlist',), fStopped, fUpdate)
         return pl
 
     def get_collection(self, fStopped=None, fUpdate=None):

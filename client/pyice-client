@@ -215,7 +215,7 @@ class ClientWindow(gtk.Window):
         btnSetBufSize.connect('clicked', btnSetBufSize_clicked)
 
         tblOpts.attach(gtk.Label('Buffer size'), 0, 1, 0, 1, yoptions=0)
-        tblOpts.attach(self._eBufSize, 1, 2, 0, 1, yoptions=0)
+        tblOpts.attach(self._eBufSize, 1, 2, 0, 1, yoptions=0, xoptions=0)
         tblOpts.attach(btnSetBufSize, 2, 3, 0, 1, yoptions=0)
 
 
@@ -319,10 +319,8 @@ class ClientWindow(gtk.Window):
 
 
     def download_collection(self):
-        def f(fStopped):
-            def fUpdate(x):
-                print 'Processed: ', x*100
-            result = self._r.get_collection(fStopped, fUpdate)
+        def f(fStopped, fUpdate):
+            result = self._r.get_collection(fStopped, lambda n: fUpdate(n/2.))
             if not result:
                 return False
             col = result
@@ -337,16 +335,17 @@ class ClientWindow(gtk.Window):
                         self._tsCollection.append(rwAlbum,
                                                   [song['path'], song['title'],
                                                   format_length(song['length'])])
+            fUpdate(1.)
             self._tvCollection.set_model(self._tsCollection)
             return True
         return self._run(f, 'Downloading collection...', \
                   'Collection downloaded successfully!', \
-                  'Failed to download collection!')
+                  'Failed to download collection!', True)
 
     def update_playlist(self):
-        def f(fStopped):
+        def f(fStopped, fUpdate):
             self._lsPlaylist.disconnect(self._lsPlaylist._deleted_handle)
-            result = self._r.get_playlist(fStopped)
+            result = self._r.get_playlist(fStopped, fUpdate)
             if not result:
                 self._tvPlaylist.set_sensitive(True)
                 return False
@@ -373,21 +372,36 @@ class ClientWindow(gtk.Window):
             return True
 
         return self._run(f, 'Downloading playlist...', \
-                  'Playlist downloaded successfully!',
-                  'Failed to download playlist!')
+                  'Playlist downloaded successfully!', \
+                  'Failed to download playlist!', True)
 
-    def _run(self, func, msgStatus, msgSuccess, msgFail):
+    def _run(self, func, msgStatus, msgSuccess, msgFail, bProgress=False):
         box = gtk.HBox()
         lblStatus = gtk.Label(msgStatus)
         btnCancel = gtk.Button(stock=gtk.STOCK_CANCEL)
         box.pack_start(lblStatus)
+
+        if bProgress:
+            pgStatus = gtk.ProgressBar()
+
+            def fProgress(n):
+                def f(x):
+                    pgStatus.set_fraction(n)
+                    pgStatus.set_text('%2.2f%%' % (n*100,))
+                gobject.idle_add(f, n)
+
+            box.pack_start(pgStatus)
+
         box.pack_start(btnCancel)
+
         self._status.pack_start(box)
         box.show_all()
 
-
         def fTarget(fStopped):
-            result = func(fStopped)
+            if bProgress:
+                result = func(fStopped, fProgress)
+            else:
+                result = func(fStopped)
             if result:
                 lblStatus.set_text(msgSuccess)
             else:
