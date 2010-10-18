@@ -119,16 +119,12 @@ class ClientWindow(gtk.Window):
                 from_index = from_path[0]
             data = selection.data
 
-            print 'Drag-drop received'
             if not data:
                 return
-            print 'DnD data is %s' % (data,)
             if not drop_info:
                 index, position = None, None
             else:
                 index, position = drop_info
-            print 'DnD: dropped at ', index
-            print 'DnD: position: ', position
             if not index:
                 nSongs = model.iter_n_children(None)
                 index = nSongs
@@ -211,10 +207,6 @@ class ClientWindow(gtk.Window):
                     gobject.idle_add(lambda: button.set_sensitive(False))
                     nBufferSize = int(self._eBufSize.get_text())
                     ret = self._r.set_buffer_size(nBufferSize)
-                    if ret:
-                        print 'success!'
-                    else:
-                        print 'fuck!'
                 except:
                     print 'fuck! Exception'
                 finally:
@@ -360,7 +352,6 @@ class ClientWindow(gtk.Window):
             def fGUI():
                 #next song will start as soon as the curent ends
                 start_time = self._current_song['end_time'] 
-                print start_time
                 self._tvPlaylist.set_sensitive(False)
                 self._tvPlaylist.set_model(None)
                 self._lsPlaylist.clear()
@@ -385,11 +376,8 @@ class ClientWindow(gtk.Window):
 
     def _run(self, func, msgStatus, msgSuccess, msgFail):
         box = gtk.HBox()
-        print box
         lblStatus = gtk.Label(msgStatus)
-        print lblStatus
         btnCancel = gtk.Button(stock=gtk.STOCK_CANCEL)
-        print btnCancel
         box.pack_start(lblStatus)
         box.pack_start(btnCancel)
         self._status.pack_start(box)
