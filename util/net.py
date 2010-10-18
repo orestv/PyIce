@@ -4,9 +4,9 @@ import re
 import time
 import pack
 
-SOCKET_TIMEOUT = 0.9
+SOCKET_TIMEOUT = 1
 
-def receive(s, fStopped=None, bClose=True, bufsize=4096):
+def receive(s, fStopped=None, bClose=True, bufsize=4096, fPercentUpdate=None):
     if fStopped:
         s.settimeout(SOCKET_TIMEOUT)
     result = ''
@@ -33,9 +33,11 @@ def receive(s, fStopped=None, bClose=True, bufsize=4096):
                     return None
                 tmp = match.group(0)
                 nMetadataLength = len(tmp)+1
-                nToReceive = int(tmp) + nMetadataLength
+                nToReceive = float(int(tmp) + nMetadataLength)
             result += data
             data = None
+            if fPercentUpdate:
+                fPercentUpdate(len(result)/nToReceive)
             if len(result) >= nToReceive:
                 result = result[nMetadataLength:]
                 break
@@ -44,18 +46,20 @@ def receive(s, fStopped=None, bClose=True, bufsize=4096):
             continue
     return pack.unpack(result)
 
-def send(socket, data, fStopped=None, bClose=True):
+def send(socket, data, fStopped=None, bClose=True, fPercentUpdate=None):
     if fStopped:
         socket.settimeout(SOCKET_TIMEOUT)
     total = 0
     data = pack.pack(data)
     size = len(data)
     data = str(size) + ';' + data
-    size = len(data)
+    size = float(len(data))
     while 1:
         try:
             sent = socket.send(data[total:])
             total += sent
+            if fPercentUpdate:
+                fPercentUpdate(total/size)
             if total >= size:
                 if bClose:
                     socket.close()
@@ -66,6 +70,6 @@ def send(socket, data, fStopped=None, bClose=True):
                     socket.close()
                 return False
 
-def command(socket, command, fStop=None):
-    send(socket, command, fStop, False)
-    return receive(socket, fStopped=fStop)
+def command(socket, command, fStop=None, fUpdate=None):
+    send(socket, command, fStop, False, fPercentUpdate=fUpdate)
+    return receive(socket, fStopped=fStop, fPercentUpdate=fUpdate)

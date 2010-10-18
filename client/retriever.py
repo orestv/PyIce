@@ -21,9 +21,9 @@ class Retriever:
         pl = net.command(s, ('get_playlist',), fStopped)
         return pl
 
-    def get_collection(self, fStopped=None):
+    def get_collection(self, fStopped=None, fUpdate=None):
         s = self._socket()
-        pl = net.command(s, ('collection',), fStopped)
+        pl = net.command(s, ('collection',), fStopped, fUpdate)
         return pl
 
     def get_buffer_size(self):
