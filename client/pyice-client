@@ -320,7 +320,7 @@ class ClientWindow(gtk.Window):
 
     def download_collection(self):
         def f(fStopped, fUpdate):
-            result = self._r.get_collection(fStopped, lambda n: fUpdate(n/2.))
+            result = self._r.get_collection(fStopped, fUpdate)
             if not result:
                 return False
             col = result
