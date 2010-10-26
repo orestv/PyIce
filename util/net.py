@@ -6,7 +6,7 @@ import pack
 
 SOCKET_TIMEOUT = 1
 
-def receive(s, fStopped=None, bClose=True, bufsize=4096, fPercentUpdate=None):
+def receive(s, fStopped=None, bClose=True, bufsize=2048, fPercentUpdate=None):
     if fStopped:
         s.settimeout(SOCKET_TIMEOUT)
     result = ''
@@ -56,7 +56,7 @@ def send(socket, data, fStopped=None, bClose=True, fPercentUpdate=None):
     size = float(len(data))
     while 1:
         try:
-            sent = socket.send(data[total:])
+            sent = socket.sendall(data[total:])
             total += sent
             if fPercentUpdate:
                 fPercentUpdate(total/size)
